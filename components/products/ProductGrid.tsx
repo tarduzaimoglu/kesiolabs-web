@@ -14,8 +14,8 @@ export function ProductGrid({
 }: {
   products: Product[];
   qtyTextById: Record<string, string>;
-  getQtyText: (id: any) => string;
-  onQtyTextChange: (id: any, v: string) => void;
+  getQtyText: (id: string) => string;
+  onQtyTextChange: (id: string, v: string) => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const openRef = useRef<HTMLDivElement | null>(null);
@@ -36,7 +36,8 @@ export function ProductGrid({
       {products.map((p) => {
         const pid = String(p.id);
         const isOpen = pid === String(openId);
-        const qtyText = qtyTextById[pid] ?? getQtyText(pid) ?? String(CART_MIN_QTY);
+        const qtyText =
+          qtyTextById[pid] ?? getQtyText(pid) ?? String(CART_MIN_QTY);
 
         if (isOpen) {
           return (
@@ -45,12 +46,7 @@ export function ProductGrid({
               ref={openRef}
               className="col-span-2 sm:col-span-3 lg:col-span-4 scroll-mt-28"
             >
-              <ProductExpandPanel
-                product={p}
-                onClose={() => setOpenId(null)}
-                qtyText={qtyText}
-                setQtyText={(v) => onQtyTextChange(pid, v)}
-              />
+              <ProductExpandPanel product={p} onClose={() => setOpenId(null)} />
             </div>
           );
         }
@@ -62,7 +58,7 @@ export function ProductGrid({
             isOpen={false}
             onOpen={() => setOpenId((prev) => (prev === pid ? null : pid))}
             qtyText={qtyText}
-            setQtyText={(v) => onQtyTextChange(pid, v)}
+            setQtyText={(v: string) => onQtyTextChange(pid, v)}
           />
         );
       })}

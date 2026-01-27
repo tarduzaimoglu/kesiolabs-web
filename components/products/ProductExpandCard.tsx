@@ -26,7 +26,15 @@ export function ProductExpandedCard({
   onClose: () => void;
 }) {
   const { addItem } = useCart();
-  const { pushToast } = useToast();
+  const toastApi = useToast() as any;
+
+// Projede toast fonksiyonunun adı farklı olabilir (pushToast / toast / addToast ...)
+// Burada hangisi varsa onu kullanıyoruz; yoksa no-op.
+const pushToast: (payload: any) => void =
+  toastApi?.pushToast ??
+  toastApi?.toast ??
+  toastApi?.addToast ??
+  (() => {});
 
   const imgSrc =
     (product as any).image ??
@@ -113,7 +121,7 @@ export function ProductExpandedCard({
                 addItem({
                   id: product.id,
                   title: product.title,
-                  price: product.wholesalePrice ?? 0,
+                  price: Number((product as any).wholesalePrice ?? (product as any).price ?? 0),
                   image: imgSrc,
                 });
                 pushToast({

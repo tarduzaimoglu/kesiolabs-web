@@ -1,4 +1,6 @@
 // lib/strapi-main.tsx
+import type { ReactNode } from "react";
+
 type AnyObj = Record<string, any>;
 
 export const STRAPI_URL =
@@ -14,7 +16,7 @@ export function getMediaUrl(input?: string | null) {
 }
 
 /** Strapi Blocks (rich text) -> basit JSX (paragraf) */
-export function renderBlocks(blocks: any): JSX.Element[] {
+export function renderBlocks(blocks: any): ReactNode[] {
   if (!Array.isArray(blocks)) return [];
 
   return blocks

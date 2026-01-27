@@ -360,12 +360,14 @@ export async function getCatalogCategories(): Promise<{ key: string; label: stri
   const res = await strapiFetch<any>(path);
   const items = unwrapCollection(res);
 
-  return items
-    .map((x: AnyObj) => ({
-      key: String(x?.slug ?? x?.id ?? ""),
-      label: String(x?.title ?? x?.slug ?? "Kategori"),
-    }))
-    .filter((x) => x.key && x.label);
+  type CategoryItem = { key: string; label: string };
+
+return items
+  .map((x: AnyObj): CategoryItem => ({
+    key: String(x?.slug ?? x?.id ?? ""),
+    label: String(x?.title ?? x?.slug ?? "Kategori"),
+  }))
+  .filter((x: CategoryItem) => Boolean(x.key && x.label));
 }
 
 /**
@@ -398,9 +400,10 @@ export async function getCatalogProducts(): Promise<any[]> {
 
     // ✅ image artık multi olabilir: imageUrls üret
     const imgField = x?.image;
-    const imageUrls: string[] = Array.isArray(imgField)
-      ? imgField.map((m: any) => getMediaUrl(m)).filter(Boolean)
-      : [getMediaUrl(imgField)].filter(Boolean);
+
+const imageUrls = (Array.isArray(imgField) ? imgField : [imgField])
+  .map((m: any) => getMediaUrl(m))
+  .filter((u): u is string => typeof u === "string" && u.length > 0);
 
     // ✅ geriye dönük uyum: tek imageUrl / image ver
     const primaryImg = imageUrls[0] || x?.imageUrl || "";
@@ -414,7 +417,7 @@ export async function getCatalogProducts(): Promise<any[]> {
 
       // ✅ UI tarafı için
       imageUrls,
-      imageUrl: primaryImg,
+         primaryImg,
       image: primaryImg,
 
       wholesalePrice: typeof x?.wholesalePrice === "number" ? x.wholesalePrice : undefined,

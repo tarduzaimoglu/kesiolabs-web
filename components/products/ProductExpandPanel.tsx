@@ -65,21 +65,36 @@ function clamp(n: number, min: number, max: number) {
 export function ProductExpandPanel({
   product,
   onClose,
+  qtyText,
+  setQtyText,
 }: {
   product: Product;
   onClose: () => void;
+  qtyText?: string;
+  setQtyText?: (v: string) => void;
 }) {
   const { addItem } = useCart();
 
   const rules = useMemo(() => pickQtyRules(product), [product]);
 
   // ✅ Çoklu görseller (Strapi’den imageUrls geliyorsa)
-  const images = useMemo(() => {
+  // ✅ TS fix: images kesin string[] olsun (src / i any hatası biter)
+  const images = useMemo<string[]>(() => {
     const p: any = product;
-    if (Array.isArray(p?.imageUrls) && p.imageUrls.length)
-      return p.imageUrls.filter(Boolean);
-    const single = p?.imageUrl || p?.image;
-    return [single || "/products/placeholder.png"].filter(Boolean);
+
+    if (Array.isArray(p?.imageUrls) && p.imageUrls.length) {
+      return p.imageUrls
+        .filter((x: unknown): x is string => typeof x === "string" && x.trim().length > 0);
+    }
+
+    const single =
+      typeof p?.imageUrl === "string"
+        ? p.imageUrl
+        : typeof p?.image === "string"
+        ? p.image
+        : "/products/placeholder.png";
+
+    return [single].filter((x): x is string => typeof x === "string" && x.trim().length > 0);
   }, [product]);
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -321,7 +336,7 @@ export function ProductExpandPanel({
             {/* Thumbnail */}
             {images.length > 1 && (
               <div className="mt-3 flex gap-2">
-                {images.map((src, i) => {
+                {images.map((src: string, i: number) => {
                   const active = i === activeIndex;
                   return (
                     <button
