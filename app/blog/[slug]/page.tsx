@@ -208,12 +208,12 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const safeHtml = richTextPrepared ? sanitizeRichHtml(richTextPrepared) : "";
 
-const fallbackParagraphs = (post.contentBlocks || "")
+const fallbackParagraphs = ((post as any).contentBlocks || "")
   .toString()
   .split("\n\n")
   .map((t) => t.trim())
   .filter(Boolean);
-  
+
   const heroImg =
     getMediaUrl(post.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
