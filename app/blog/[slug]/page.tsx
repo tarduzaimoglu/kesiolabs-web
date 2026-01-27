@@ -208,11 +208,11 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const safeHtml = richTextPrepared ? sanitizeRichHtml(richTextPrepared) : "";
 
-const fallbackParagraphs = ((post as any).contentBlocks || "")
-  .toString()
-  .split("\n\n")
-  .map((t) => t.trim())
-  .filter(Boolean);
+  // ✅ kesinlikle string[] olsun (TS any hataları burada bitiyor)
+  const fallbackParagraphs: string[] = String((post as any).contentBlocks ?? "")
+    .split("\n\n")
+    .map((t: string) => t.trim())
+    .filter(Boolean);
 
   const heroImg =
     getMediaUrl(post.coverImage) ?? "/blog/covers/placeholder-1.jpg";
@@ -272,17 +272,17 @@ const fallbackParagraphs = ((post as any).contentBlocks || "")
 
         {/* Content */}
         <section
-  className="
-    mt-6 max-w-none break-words [overflow-wrap:anywhere]
-    prose prose-slate
-    [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:mt-6 [&_h1]:mb-3
-    [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3
-    [&_h3]:text-xl  [&_h3]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2
-    [&_h4]:text-lg  [&_h4]:font-semibold [&_h4]:mt-4 [&_h4]:mb-2
-    [&_p]:text-[13px] [&_p]:leading-7
-    [&_ul]:my-4 [&_ol]:my-4
-  "
->
+          className="
+            mt-6 max-w-none break-words [overflow-wrap:anywhere]
+            prose prose-slate
+            [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:mt-6 [&_h1]:mb-3
+            [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3
+            [&_h3]:text-xl  [&_h3]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2
+            [&_h4]:text-lg  [&_h4]:font-semibold [&_h4]:mt-4 [&_h4]:mb-2
+            [&_p]:text-[13px] [&_p]:leading-7
+            [&_ul]:my-4 [&_ol]:my-4
+          "
+        >
           {safeHtml ? (
             // ✅ boşluk/indent ve satır sonlarını koru
             <div
@@ -292,14 +292,16 @@ const fallbackParagraphs = ((post as any).contentBlocks || "")
           ) : blocks.length ? (
             <StrapiBlocks blocks={blocks} />
           ) : fallbackParagraphs.length ? (
-            fallbackParagraphs.map((p, i) => (
-              <p
-                key={i}
-                className="text-[13px] leading-7 text-slate-700 mt-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-              >
-                {p}
-              </p>
-            ))
+            <>
+              {fallbackParagraphs.map((p: string, i: number) => (
+                <p
+                  key={i}
+                  className="text-[13px] leading-7 text-slate-700 mt-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                >
+                  {p}
+                </p>
+              ))}
+            </>
           ) : (
             <p className="text-[13px] leading-7 text-slate-700 mt-4">
               (Bu yazının içeriği yakında eklenecek.)
