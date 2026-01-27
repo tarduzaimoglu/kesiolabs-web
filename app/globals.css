@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
+/* Tailwind v4 uyumlu – SADECE ZEMİN KONTROLÜ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  background-color: #ffffff;
+  color: #0f172a;
+  overflow-x: hidden; /* ✅ mobilde sağa kayma / yatay taşma engeli */
+}
+
+/* Next root */
+#__next {
+  background-color: #ffffff;
+}
+
+/* ✅ Mobil yatay scroll alanında scrollbar gizlemek için */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
 }
