@@ -241,6 +241,7 @@ export default async function AboutPage() {
                 className="object-cover md:hidden"
                 priority
                 sizes="100vw"
+                unoptimized
               />
             ) : null}
 
@@ -252,6 +253,7 @@ export default async function AboutPage() {
                 className="hidden md:block object-cover"
                 priority
                 sizes="100vw"
+                unoptimized
               />
             ) : null}
 
@@ -311,6 +313,7 @@ export default async function AboutPage() {
                 fill
                 className="object-cover md:hidden"
                 sizes="100vw"
+                unoptimized
               />
             ) : null}
 
@@ -321,6 +324,7 @@ export default async function AboutPage() {
                 fill
                 className="hidden md:block object-cover"
                 sizes="100vw"
+                unoptimized
               />
             ) : null}
 
@@ -373,6 +377,7 @@ export default async function AboutPage() {
                         fill
                         className="object-cover object-top"
                         sizes="(max-width: 1024px) 33vw, 25vw"
+                        unoptimized
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-slate-400">
