@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -16,7 +16,16 @@ type Props = {
 
 // Bambu Lab P1S bed size ~256x256 mm
 const BED_SIZE_MM = 256;
-const GRID_DIV = 16; // 16 => 16mm adım gibi düşünebilirsin (256/16=16)
+const GRID_DIV = 16;
+
+// iOS WebKit daha hassas; istersen limite çek
+const IOS_MAX_VERTICES = 800_000;
+
+function isIOS() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/i.test(ua);
+}
 
 function StlMesh({
   url,
@@ -32,26 +41,56 @@ function StlMesh({
   onBounds: (b: { height: number; centerY: number }) => void;
 }) {
   const [geom, setGeom] = useState<THREE.BufferGeometry | null>(null);
+  const geomRef = useRef<THREE.BufferGeometry | null>(null);
   const [yOffset, setYOffset] = useState(0);
+
+  // ✅ URL değişince eski geometry’yi hemen temizle (RAM/GPU leak önler)
+  useEffect(() => {
+    return () => {
+      if (geomRef.current) {
+        geomRef.current.dispose();
+        geomRef.current = null;
+      }
+      setGeom(null);
+    };
+  }, [url]);
 
   useEffect(() => {
     let cancelled = false;
 
     const loader = new STLLoader();
+
     loader.load(
       url,
       (geometry) => {
-        if (cancelled) return;
+        if (cancelled) {
+          geometry.dispose();
+          return;
+        }
 
         try {
+          // ✅ Eski geometry varsa dispose et
+          if (geomRef.current) {
+            geomRef.current.dispose();
+            geomRef.current = null;
+          }
+
+          // ✅ iOS için erken komplekslik kontrolü (opsiyonel)
+          // (position attribute yoksa zaten hata)
+          const pos = geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+          if (pos?.count && isIOS() && pos.count > IOS_MAX_VERTICES) {
+            geometry.dispose();
+            onError("TOO_COMPLEX");
+            return;
+          }
+
           geometry.computeVertexNormals();
           geometry.center();
 
-          // metrikler
+          // metrikler (computeMetricsFromGeometry iOS-safe olmalı: clone yapmamalı)
           const m = computeMetricsFromGeometry(geometry);
           onMetrics(m);
 
-          // bounding box ile tablayı hizala + target ayarla
           geometry.computeBoundingBox();
           const bb = geometry.boundingBox;
 
@@ -59,19 +98,22 @@ function StlMesh({
             const height = bb.max.y - bb.min.y;
             const centerY = (bb.max.y + bb.min.y) * 0.5;
 
-            // modelin altını y=0’a oturt
             const offset = -bb.min.y;
             setYOffset(offset);
 
-            // OrbitControls target için bilgi
             onBounds({ height, centerY });
           } else {
             setYOffset(0);
             onBounds({ height: 120, centerY: 0 });
           }
 
+          // ✅ state + ref
+          geomRef.current = geometry;
           setGeom(geometry);
         } catch (e: any) {
+          // ✅ hata olursa geometry’yi bırakma
+          geometry.dispose();
+
           const msg = String(e?.message || e);
           if (msg.includes("TOO_COMPLEX")) onError("TOO_COMPLEX");
           else onError("STL_UNREADABLE");
@@ -99,6 +141,16 @@ function StlMesh({
     [colorHex]
   );
 
+  // ✅ component unmount olursa geometry dispose
+  useEffect(() => {
+    return () => {
+      if (geomRef.current) {
+        geomRef.current.dispose();
+        geomRef.current = null;
+      }
+    };
+  }, []);
+
   if (!geom) return null;
 
   return (
@@ -124,19 +176,13 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
         shadow-mapSize-height={1024}
       />
 
-      {/* ✅ P1S tablayı görünür yap: gri plane + grid */}
       <group position={[0, 0, 0]}>
-        {/* plane biraz aşağıda dursun (z-fighting olmasın) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, -0.6, 0]}>
           <planeGeometry args={[BED_SIZE_MM, BED_SIZE_MM]} />
           <meshStandardMaterial color={"#e9e9e9"} roughness={0.95} metalness={0.0} />
         </mesh>
 
-        {/* grid çizgileri */}
-        <gridHelper
-          args={[BED_SIZE_MM, GRID_DIV, "#bdbdbd", "#d6d6d6"]}
-          position={[0, 0.05, 0]}
-        />
+        <gridHelper args={[BED_SIZE_MM, GRID_DIV, "#bdbdbd", "#d6d6d6"]} position={[0, 0.05, 0]} />
       </group>
 
       <Suspense fallback={null}>
@@ -147,8 +193,6 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
             onMetrics={onMetrics}
             onError={onError}
             onBounds={({ height }) => {
-              // ✅ modeli preview içinde daha ortalı göstermek için targetY dinamik
-              // height küçükse bile biraz yukarı hedefle
               const next = Math.max(35, Math.min(140, height * 0.45));
               setTargetY(next);
             }}

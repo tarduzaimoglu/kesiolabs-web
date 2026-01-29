@@ -3,7 +3,10 @@ import * as THREE from "three";
 export const MAX_VERTICES = 2_000_000;
 
 export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
-  const g = geom.index ? geom.toNonIndexed() : geom.clone();
+  // ✅ iOS için kritik: non-indexed ise ASLA clone yapma
+  // Index varsa non-indexed'e çevirmek metrik için gerekli olabilir.
+  const g = geom.index ? geom.toNonIndexed() : geom;
+
   const pos = g.getAttribute("position");
   if (!pos) throw new Error("NO_POSITION");
 
@@ -30,14 +33,18 @@ export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
     ac.subVectors(c, a);
     cross.crossVectors(ab, ac);
 
-    const triArea = cross.length() * 0.5;
+    const crossLen = cross.length();
+    const triArea = crossLen * 0.5;
     area += triArea;
 
+    // Signed volume contribution
     volume += a.dot(cross) / 6.0;
 
-    const n = cross.clone().normalize();
-    const horizWeight = Math.abs(n.y);
-    horizArea += triArea * horizWeight;
+    // ✅ normalize() yerine: abs(n.y) = abs(cross.y)/|cross|
+    if (crossLen > 0) {
+      const horizWeight = Math.abs(cross.y) / crossLen;
+      horizArea += triArea * horizWeight;
+    }
   }
 
   return {
