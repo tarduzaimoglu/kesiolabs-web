@@ -152,25 +152,26 @@ export default function Header() {
         <button
           aria-label="Menüyü kapat"
           onClick={() => setOpen(false)}
-          className={[
-            "absolute inset-0 bg-black/55",
-            "transition-opacity duration-300",
-            EASE,
-            open ? "opacity-100" : "opacity-0",
-          ].join(" ")}
+         className={[
+  "absolute inset-0 backdrop-soft",
+  "transition-opacity duration-300",
+  EASE,
+  open ? "opacity-100" : "opacity-0",
+].join(" ")}
           style={{ backdropFilter: "blur(2px)" }}
         />
 
         {/* Sheet */}
         <div
           className={[
-            "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
-            "bg-[#FAFAF7] border-l border-slate-200 shadow-2xl",
-            // daha premium: hafif opacity + translate + scale
-            "transform-gpu transition-all duration-300",
-            EASE,
-            open ? "translate-x-0 opacity-100 scale-100" : "translate-x-full opacity-0 scale-[0.98]",
-          ].join(" ")}
+  "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
+  "bg-[#FAFAF7] border-l border-slate-200 shadow-2xl sheet-edge",
+  "transform-gpu transition-all duration-300",
+  EASE,
+  open
+    ? "translate-x-0 opacity-100 scale-100 animate-sheet-in"
+    : "translate-x-full opacity-0 scale-[0.98]",
+].join(" ")}
           style={{
             paddingTop: "env(safe-area-inset-top)",
             paddingBottom: "env(safe-area-inset-bottom)",
@@ -209,21 +210,22 @@ export default function Header() {
                     style={{ transitionDelay: open ? `${110 + idx * 55}ms` : "0ms" }}
                   >
                     <Link
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className={`
-                        block w-full rounded-2xl px-5 py-4
-                        text-[18px] font-semibold
-                        border shadow-sm transition-colors
-                        ${
-                          isActive
-                            ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
-                            : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
-                        }
-                      `}
-                    >
-                      {item.label}
-                    </Link>
+  href={item.href}
+  onClick={() => setOpen(false)}
+  className={`
+    menu-card-pop
+    block w-full rounded-2xl px-5 py-4
+    text-[18px] font-semibold
+    border shadow-sm transition-colors
+    ${
+      isActive
+        ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
+        : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
+    }
+  `}
+>
+  {item.label}
+</Link>
                   </li>
                 );
               })}
