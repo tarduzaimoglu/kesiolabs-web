@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navItems = [
@@ -16,11 +15,41 @@ const navItems = [
 
 // ✅ Tek kaynaktan logo ölçüsü
 const LOGO_CLASS = "h-10 w-auto"; // 40px
-const SIDE_COL = "w-[180px]"; // logo kadar boşluk (menü ortalama için)
+const SIDE_COL = "w-[180px]"; // menü ortalamak için sağ/sol eş alan
+
+function AnimatedBurger({ open }: { open: boolean }) {
+  // Hamburger -> X dönüşümü (pure CSS)
+  return (
+    <span className="relative block h-6 w-6" aria-hidden="true">
+      <span
+        className={[
+          "absolute left-0 top-[6px] h-[2px] w-6 rounded-full bg-slate-700",
+          "transition-transform transition-opacity duration-200 ease-out",
+          open ? "translate-y-[6px] rotate-45" : "",
+        ].join(" ")}
+      />
+      <span
+        className={[
+          "absolute left-0 top-[12px] h-[2px] w-6 rounded-full bg-slate-700",
+          "transition-opacity duration-150 ease-out",
+          open ? "opacity-0" : "opacity-100",
+        ].join(" ")}
+      />
+      <span
+        className={[
+          "absolute left-0 top-[18px] h-[2px] w-6 rounded-full bg-slate-700",
+          "transition-transform transition-opacity duration-200 ease-out",
+          open ? "-translate-y-[6px] -rotate-45" : "",
+        ].join(" ")}
+      />
+    </span>
+  );
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const activePath = useMemo(() => pathname || "", [pathname]);
 
   // body scroll lock
   useEffect(() => {
@@ -30,7 +59,7 @@ export default function Header() {
     };
   }, [open]);
 
-  // ESC ile kapatma (soft UX)
+  // ESC ile kapat
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -39,8 +68,6 @@ export default function Header() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-
-  const activePath = useMemo(() => pathname || "", [pathname]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
@@ -79,87 +106,84 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Sağ: Logo kadar boşluk + mobile button */}
+          {/* Sağ: Boşluk + mobile toggle */}
           <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
             <button
               type="button"
-              aria-label="Menüyü aç"
-              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100 transition"
-              onClick={() => setOpen(true)}
+              aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
+              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100 transition"
+              onClick={() => setOpen((v) => !v)}
             >
-              <Menu size={28} />
+              <AnimatedBurger open={open} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* ✅ Mobile Menu (animasyonlu) */}
+      {/* ✅ iOS-style Sheet Menu (sağdan açılır) */}
       <div
-        className={`
-          md:hidden fixed inset-0 z-[60]
-          ${open ? "pointer-events-auto" : "pointer-events-none"}
-        `}
+        className={[
+          "md:hidden fixed inset-0 z-[60]",
+          open ? "pointer-events-auto" : "pointer-events-none",
+        ].join(" ")}
         aria-hidden={!open}
       >
-        {/* Backdrop (fade) */}
+        {/* Backdrop fade */}
         <button
           aria-label="Menüyü kapat"
           onClick={() => setOpen(false)}
-          className={`
-            absolute inset-0
-            bg-black/65
-            transition-opacity duration-300 ease-out
-            ${open ? "opacity-100" : "opacity-0"}
-          `}
+          className={[
+            "absolute inset-0 bg-black/60",
+            "transition-opacity duration-300 ease-out",
+            open ? "opacity-100" : "opacity-0",
+          ].join(" ")}
         />
 
-        {/* Panel (slide down + blur soft) */}
+        {/* Sheet (right side) */}
         <div
-          className={`
-            absolute inset-x-0 top-0
-            bg-[#FAFAF7]
-            border-b border-slate-200
-            transition-transform duration-300 ease-out
-            ${open ? "translate-y-0" : "-translate-y-6"}
-          `}
+          className={[
+            "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
+            "bg-[#FAFAF7] border-l border-slate-200",
+            "shadow-2xl",
+            "transition-transform duration-300 ease-out",
+            open ? "translate-x-0" : "translate-x-full",
+          ].join(" ")}
           style={{
-            // iOS safe area için küçük iyileştirme
             paddingTop: "env(safe-area-inset-top)",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
-          {/* Top bar */}
-          <div className="flex h-20 items-center justify-between px-6">
+          {/* Sheet top bar */}
+          <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
             {/* ✅ Aynı logo ölçüsü */}
             <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
               <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
             </Link>
 
-            {/* Close button */}
+            {/* Close (aynı toggle butonu, ikon X olmuş durumda) */}
             <button
               type="button"
               aria-label="Menüyü kapat"
-              className="inline-flex items-center justify-center rounded-2xl p-3 text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
               onClick={() => setOpen(false)}
             >
-              <X size={28} />
+              <AnimatedBurger open={true} />
             </button>
           </div>
 
-          {/* Links (stagger animasyon) */}
-          <nav className="px-6 pb-8">
+          {/* Links (stagger + soft) */}
+          <nav className="px-6 py-6">
             <ul className="flex flex-col gap-4">
               {navItems.map((item, idx) => {
                 const isActive = activePath === item.href;
                 return (
                   <li
                     key={item.href}
-                    className={`
-                      transition-all duration-300 ease-out
-                      ${open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
-                    `}
-                    style={{
-                      transitionDelay: open ? `${70 + idx * 55}ms` : "0ms",
-                    }}
+                    className={[
+                      "transition-all duration-300 ease-out",
+                      open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2",
+                    ].join(" ")}
+                    style={{ transitionDelay: open ? `${90 + idx * 55}ms` : "0ms" }}
                   >
                     <Link
                       href={item.href}
