@@ -26,16 +26,16 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
   const items = useMemo(() => (Array.isArray(banners) ? banners : []), [banners]);
   const [active, setActive] = useState(0);
 
-  // Drag state (refs to avoid rerender)
   const viewportRef = useRef<HTMLDivElement | null>(null);
+
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
-  const startOffsetRef = useRef(0);
   const widthRef = useRef(1);
+
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Autoplay
+  // Autoplay (drag sırasında durur)
   useEffect(() => {
     if (items.length <= 1) return;
     if (isDragging) return;
@@ -47,7 +47,6 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
     return () => clearInterval(t);
   }, [items.length, isDragging]);
 
-  // Keep active in range
   useEffect(() => {
     if (!items.length) return;
     setActive((i) => clampIndex(i, items.length));
@@ -72,31 +71,7 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
 
   const goTo = (i: number) => setActive(clampIndex(i, items.length));
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (items.length <= 1) return;
-
-    // Only main button / touch / pen
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-
-    const el = viewportRef.current;
-    if (!el) return;
-
-    el.setPointerCapture?.(e.pointerId);
-
-    isDraggingRef.current = true;
-    setIsDragging(true);
-
-    startXRef.current = e.clientX;
-    startOffsetRef.current = dragOffset; // usually 0, but safe
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - startXRef.current;
-    setDragOffset(startOffsetRef.current + dx);
-  };
-
-  const endDrag = (clientX: number) => {
+  const settle = (clientX: number) => {
     if (!isDraggingRef.current) return;
 
     isDraggingRef.current = false;
@@ -105,23 +80,67 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
     const dx = clientX - startXRef.current;
     const w = widthRef.current || 1;
 
-    // thresholds
     const minSwipe = Math.max(60, w * 0.15);
 
-    if (dx <= -minSwipe) {
-      goTo(active + 1);
-    } else if (dx >= minSwipe) {
-      goTo(active - 1);
-    }
+    if (dx <= -minSwipe) goTo(active + 1);
+    else if (dx >= minSwipe) goTo(active - 1);
 
     setDragOffset(0);
   };
 
-  const onPointerUp = (e: React.PointerEvent) => endDrag(e.clientX);
-  const onPointerCancel = (e: React.PointerEvent) => endDrag(e.clientX);
-  const onPointerLeave = (e: React.PointerEvent) => {
-    // If user drags out of bounds then releases, we still want to settle
-    if (isDraggingRef.current) endDrag(e.clientX);
+  // ----- Pointer (desktop / modern browsers)
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (items.length <= 1) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+
+    // iOS tarafında capture bazen sorun çıkarıyor; desktop için dursun
+    try {
+      viewportRef.current?.setPointerCapture?.(e.pointerId);
+    } catch {}
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const dx = e.clientX - startXRef.current;
+    setDragOffset(dx);
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => settle(e.clientX);
+  const onPointerCancel = (e: React.PointerEvent) => settle(e.clientX);
+
+  // ----- Touch (gerçek iPhone/iPad için)
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (items.length <= 1) return;
+    const x = e.touches[0]?.clientX ?? 0;
+
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startXRef.current = x;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingRef.current) return;
+    const x = e.touches[0]?.clientX ?? 0;
+    const dx = x - startXRef.current;
+
+    // yatay swipe’ta sayfanın “scroll” hisse girmemesi için
+    if (Math.abs(dx) > 6) e.preventDefault();
+
+    setDragOffset(dx);
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const x = e.changedTouches[0]?.clientX ?? startXRef.current;
+    settle(x);
+  };
+
+  const onTouchCancel = (e: React.TouchEvent) => {
+    const x = e.changedTouches[0]?.clientX ?? startXRef.current;
+    settle(x);
   };
 
   const translateX = -(active * 100);
@@ -131,19 +150,25 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
       <div
         ref={viewportRef}
         className={[
-          "relative h-[520px] md:h-[560px] w-full overflow-hidden",
-          "touch-pan-y", // allow vertical scroll, we handle horizontal
+          "relative h-[520px] md:h-[560px] w-full overflow-hidden select-none",
           items.length > 1 ? "cursor-grab active:cursor-grabbing" : "",
-          "select-none",
         ].join(" ")}
+        style={{
+          // Tailwind class’ı bazen safelist/derleme yüzünden kaçabiliyor; inline garanti
+          touchAction: "pan-y",
+        }}
+        // Pointer
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
-        onPointerLeave={onPointerLeave}
+        // Touch
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchCancel}
         aria-roledescription="carousel"
       >
-        {/* Track */}
         <div
           className="absolute inset-0 flex"
           style={{
@@ -158,7 +183,6 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
 
             return (
               <div key={b.id} className="relative h-full w-full flex-shrink-0">
-                {/* Desktop img */}
                 {!!desktopUrl && (
                   <div className="hidden md:block absolute inset-0">
                     <Image
@@ -173,7 +197,6 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
                   </div>
                 )}
 
-                {/* Mobile img */}
                 {!!mobileUrl && (
                   <div className="md:hidden absolute inset-0">
                     <Image
@@ -188,10 +211,8 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
                   </div>
                 )}
 
-                {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-black/10" />
 
-                {/* Content */}
                 <div className="relative z-10 h-full max-w-6xl mx-auto px-5 md:px-8 flex items-center">
                   <div className="max-w-xl">
                     <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
@@ -218,7 +239,7 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
                           href={b.buttonLink}
                           className="inline-flex items-center rounded-md bg-white/10 hover:bg-white/15 text-white px-4 py-2 text-sm border border-white/20 backdrop-blur"
                           onClick={(e) => {
-                            // Drag sırasında link yanlışlıkla tıklanmasın
+                            // drag sırasında yanlışlıkla link tıklanmasın
                             if (isDraggingRef.current) e.preventDefault();
                           }}
                         >
@@ -233,7 +254,6 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
           })}
         </div>
 
-        {/* Dots */}
         {items.length > 1 ? (
           <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center gap-2">
             {items.map((_, i) => (
