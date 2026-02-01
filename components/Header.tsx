@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -14,10 +14,15 @@ const navItems = [
   { label: "Hakkımızda", href: "/about" },
 ];
 
+// ✅ Tek kaynaktan logo ölçüsü
+const LOGO_CLASS = "h-10 w-auto"; // 40px
+const SIDE_COL = "w-[180px]"; // logo kadar boşluk (menü ortalama için)
+
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // body scroll lock
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -25,24 +30,30 @@ export default function Header() {
     };
   }, [open]);
 
+  // ESC ile kapatma (soft UX)
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const activePath = useMemo(() => pathname || "", [pathname]);
+
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
-        {/* Sol (logo alanı) - Orta (menü) - Sağ (logo kadar boşluk) */}
         <div className="flex h-20 items-center">
           {/* Sol: Logo */}
-          <div className="flex-shrink-0 w-[180px]">
+          <div className={`flex-shrink-0 ${SIDE_COL}`}>
             <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
-              <img
-                src="/logo.png"
-                alt="KesioLabs"
-                className="h-10 w-auto"
-                draggable={false}
-              />
+              <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
             </Link>
           </div>
 
-          {/* Orta: Desktop/Tablet nav (tek satır + yatay scroll) */}
+          {/* Orta: Desktop/Tablet nav */}
           <nav className="hidden md:flex flex-1 min-w-0 justify-center">
             <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
               {navItems.map((item, i) => (
@@ -52,7 +63,7 @@ export default function Header() {
                     className={`
                       shrink-0 transition-colors duration-200
                       ${
-                        pathname === item.href
+                        activePath === item.href
                           ? "text-[#ff7a00] font-semibold"
                           : "text-slate-700 hover:text-[#ff7a00]"
                       }
@@ -60,7 +71,6 @@ export default function Header() {
                   >
                     {item.label}
                   </Link>
-
                   {i !== navItems.length - 1 && (
                     <span className="h-5 w-px bg-slate-200 shrink-0" />
                   )}
@@ -69,12 +79,12 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Sağ: Logo kadar boşluk + mobile hamburger */}
-          <div className="flex-shrink-0 w-[180px] flex items-center justify-end">
+          {/* Sağ: Logo kadar boşluk + mobile button */}
+          <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
             <button
               type="button"
               aria-label="Menüyü aç"
-              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
+              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100 transition"
               onClick={() => setOpen(true)}
             >
               <Menu size={28} />
@@ -83,44 +93,74 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-[60]">
-          {/* Backdrop */}
-          <button
-            aria-label="Menüyü kapat"
-            className="absolute inset-0 bg-black/65"
-            onClick={() => setOpen(false)}
-          />
+      {/* ✅ Mobile Menu (animasyonlu) */}
+      <div
+        className={`
+          md:hidden fixed inset-0 z-[60]
+          ${open ? "pointer-events-auto" : "pointer-events-none"}
+        `}
+        aria-hidden={!open}
+      >
+        {/* Backdrop (fade) */}
+        <button
+          aria-label="Menüyü kapat"
+          onClick={() => setOpen(false)}
+          className={`
+            absolute inset-0
+            bg-black/65
+            transition-opacity duration-300 ease-out
+            ${open ? "opacity-100" : "opacity-0"}
+          `}
+        />
 
-          {/* Panel */}
-          <div className="absolute inset-0 bg-[#FAFAF7]">
-            {/* Top bar */}
-            <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
-             <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
-  <img
-    src="/logo.png"
-    alt="KesioLabs"
-    className="h-10 w-auto"
-    draggable={false}
-  />
-</Link>
+        {/* Panel (slide down + blur soft) */}
+        <div
+          className={`
+            absolute inset-x-0 top-0
+            bg-[#FAFAF7]
+            border-b border-slate-200
+            transition-transform duration-300 ease-out
+            ${open ? "translate-y-0" : "-translate-y-6"}
+          `}
+          style={{
+            // iOS safe area için küçük iyileştirme
+            paddingTop: "env(safe-area-inset-top)",
+          }}
+        >
+          {/* Top bar */}
+          <div className="flex h-20 items-center justify-between px-6">
+            {/* ✅ Aynı logo ölçüsü */}
+            <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
+              <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
+            </Link>
 
-              <button
-                type="button"
-                aria-label="Menüyü kapat"
-                className="inline-flex items-center justify-center rounded-2xl p-3 text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
-                onClick={() => setOpen(false)}
-              >
-                <X size={28} />
-              </button>
-            </div>
+            {/* Close button */}
+            <button
+              type="button"
+              aria-label="Menüyü kapat"
+              className="inline-flex items-center justify-center rounded-2xl p-3 text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              onClick={() => setOpen(false)}
+            >
+              <X size={28} />
+            </button>
+          </div>
 
-            {/* Links */}
-            <nav className="px-6 py-6">
-              <ul className="flex flex-col gap-4">
-                {navItems.map((item) => (
-                  <li key={item.href}>
+          {/* Links (stagger animasyon) */}
+          <nav className="px-6 pb-8">
+            <ul className="flex flex-col gap-4">
+              {navItems.map((item, idx) => {
+                const isActive = activePath === item.href;
+                return (
+                  <li
+                    key={item.href}
+                    className={`
+                      transition-all duration-300 ease-out
+                      ${open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
+                    `}
+                    style={{
+                      transitionDelay: open ? `${70 + idx * 55}ms` : "0ms",
+                    }}
+                  >
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
@@ -130,7 +170,7 @@ export default function Header() {
                         text-[18px] font-semibold
                         border shadow-sm transition-colors
                         ${
-                          pathname === item.href
+                          isActive
                             ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
                             : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
                         }
@@ -139,12 +179,12 @@ export default function Header() {
                       {item.label}
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }
