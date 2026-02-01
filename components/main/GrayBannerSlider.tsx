@@ -27,10 +27,10 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const widthRef = useRef(1);
+
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Autoplay
   useEffect(() => {
     if (items.length <= 1) return;
     if (isDragging) return;
@@ -65,27 +65,7 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
 
   const goTo = (i: number) => setActive(clampIndex(i, items.length));
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (items.length <= 1) return;
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-
-    const el = viewportRef.current;
-    if (!el) return;
-
-    el.setPointerCapture?.(e.pointerId);
-
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    startXRef.current = e.clientX;
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - startXRef.current;
-    setDragOffset(dx);
-  };
-
-  const endDrag = (clientX: number) => {
+  const settle = (clientX: number) => {
     if (!isDraggingRef.current) return;
 
     isDraggingRef.current = false;
@@ -101,10 +81,55 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
     setDragOffset(0);
   };
 
-  const onPointerUp = (e: React.PointerEvent) => endDrag(e.clientX);
-  const onPointerCancel = (e: React.PointerEvent) => endDrag(e.clientX);
-  const onPointerLeave = (e: React.PointerEvent) => {
-    if (isDraggingRef.current) endDrag(e.clientX);
+  // Pointer
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (items.length <= 1) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+
+    try {
+      viewportRef.current?.setPointerCapture?.(e.pointerId);
+    } catch {}
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    setDragOffset(e.clientX - startXRef.current);
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => settle(e.clientX);
+  const onPointerCancel = (e: React.PointerEvent) => settle(e.clientX);
+
+  // Touch
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (items.length <= 1) return;
+    const x = e.touches[0]?.clientX ?? 0;
+
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startXRef.current = x;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingRef.current) return;
+    const x = e.touches[0]?.clientX ?? 0;
+    const dx = x - startXRef.current;
+
+    if (Math.abs(dx) > 6) e.preventDefault();
+    setDragOffset(dx);
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const x = e.changedTouches[0]?.clientX ?? startXRef.current;
+    settle(x);
+  };
+
+  const onTouchCancel = (e: React.TouchEvent) => {
+    const x = e.changedTouches[0]?.clientX ?? startXRef.current;
+    settle(x);
   };
 
   const translateX = -(active * 100);
@@ -117,16 +142,21 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
           className={[
             "relative overflow-hidden border border-slate-200 bg-slate-50",
             "rounded-tl-[98px] md:rounded-tl-[196px]",
-            "touch-pan-y select-none",
+            "select-none",
             items.length > 1 ? "cursor-grab active:cursor-grabbing" : "",
           ].join(" ")}
+          style={{ touchAction: "pan-y" }}
+          // Pointer
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
-          onPointerLeave={onPointerLeave}
+          // Touch
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchCancel}
         >
-          {/* Track */}
           <div
             className="flex"
             style={{
@@ -138,8 +168,10 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
             {items.map((b) => {
               const img = getMediaUrl(b?.image?.url);
               return (
-                <div key={b.id} className="relative h-[520px] md:h-[680px] w-full flex-shrink-0">
-                  {/* background */}
+                <div
+                  key={b.id}
+                  className="relative h-[520px] md:h-[680px] w-full flex-shrink-0"
+                >
                   {img ? (
                     <div className="absolute inset-0">
                       <Image
@@ -154,7 +186,6 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
                     </div>
                   ) : null}
 
-                  {/* content */}
                   <div className="relative z-10 h-full flex items-center justify-center text-center px-6">
                     <div className="max-w-2xl">
                       <h3 className="text-xl md:text-3xl font-semibold text-white">
@@ -188,7 +219,6 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
           </div>
         </div>
 
-        {/* dots */}
         {items.length > 1 ? (
           <div className="mt-5 flex items-center justify-center gap-2">
             {items.map((_, i) => (
