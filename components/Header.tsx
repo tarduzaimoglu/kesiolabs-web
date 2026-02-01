@@ -156,8 +156,7 @@ export default function Header() {
          {/* Sheet top bar (LOGO YOK, YAZI VAR) */}
 <div className="flex min-h-[88px] items-center justify-between px-6 border-b border-slate-200">
   <p className="pr-4 text-[13px] leading-relaxed italic text-slate-500">
-    KesioLabs, dijital üretim teknolojilerini yaratıcı ve mühendislik odaklı
-    tasarım süreçleriyle birleştiren modern bir üretim stüdyosudur.
+    Fikirden ürüne..
   </p>
 
   <button
