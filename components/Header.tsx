@@ -27,62 +27,23 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
+      {/* Full width bar */}
       <div className="w-full px-6">
-        {/* Tek satır: Logo - Nav (scroll) - Mobile button */}
-       <div className="flex h-20 items-center">
-  {/* Sol: Logo */}
-  <div className="flex-shrink-0 w-[160px]">
-    <Link href="/" onClick={() => setOpen(false)}>
-      <img
-        src="/logo.png"
-        alt="KesioLabs"
-        className="h-8 w-auto"
-        draggable={false}
-      />
-    </Link>
-  </div>
+        {/* Sol (logo alanı) - Orta (menü) - Sağ (logo kadar boşluk) */}
+        <div className="flex h-20 items-center">
+          {/* Sol: Logo */}
+          <div className="flex-shrink-0 w-[140px] lg:w-[160px]">
+            <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
+              <img
+                src="/logo.png"
+                alt="KesioLabs"
+                className="h-8 w-auto"
+                draggable={false}
+              />
+            </Link>
+          </div>
 
-  {/* Orta: Menü */}
-  <nav className="hidden md:flex flex-1 min-w-0 justify-center">
-    <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
-      {navItems.map((item, i) => (
-        <div key={item.href} className="flex items-center gap-8">
-          <Link
-            href={item.href}
-            className={`
-              shrink-0 transition-colors duration-200
-              ${
-                pathname === item.href
-                  ? "text-[#ff7a00] font-semibold"
-                  : "text-slate-700 hover:text-[#ff7a00]"
-              }
-            `}
-          >
-            {item.label}
-          </Link>
-
-          {i !== navItems.length - 1 && (
-            <span className="h-5 w-px bg-slate-200 shrink-0" />
-          )}
-        </div>
-      ))}
-    </div>
-  </nav>
-
-  {/* Sağ: Logo kadar boşluk (dengeleyici) */}
-  <div className="flex-shrink-0 w-[160px]" />
-</div>
-          {/* Logo */}
-          <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
-            <img
-              src="/logo.png"
-              alt="KesioLabs"
-              className="h-8 w-auto"
-              draggable={false}
-            />
-          </Link>
-
-          {/* Desktop/Tablet nav: tek satır + kendi içinde yatay scroll */}
+          {/* Orta: Desktop/Tablet nav (tek satır + yatay scroll) */}
           <nav className="hidden md:flex flex-1 min-w-0 justify-center">
             <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
               {navItems.map((item, i) => (
@@ -109,15 +70,18 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            aria-label="Menüyü aç"
-            className="md:hidden ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
-            onClick={() => setOpen(true)}
-          >
-            <Menu size={28} />
-          </button>
+          {/* Sağ: Logo kadar boşluk (menüyü tam ortalamak için) */}
+          <div className="flex-shrink-0 w-[140px] lg:w-[160px] flex items-center justify-end">
+            {/* Mobile hamburger */}
+            <button
+              type="button"
+              aria-label="Menüyü aç"
+              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
+              onClick={() => setOpen(true)}
+            >
+              <Menu size={28} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -144,6 +108,7 @@ export default function Header() {
                 />
               </Link>
 
+              {/* Close button */}
               <button
                 type="button"
                 aria-label="Menüyü kapat"
@@ -186,3 +151,4 @@ export default function Header() {
     </header>
   );
 }
+
