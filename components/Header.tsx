@@ -26,11 +26,10 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
-      {/* Full width bar */}
+    <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
-        {/* 3 kolon: Sol (logo) - Orta (boş alan) - Sağ (mobile btn) */}
-        <div className="relative grid h-20 grid-cols-[auto_1fr_auto] items-center">
+        {/* Tek satır: Logo - Nav (scroll) - Mobile button */}
+        <div className="flex h-20 items-center gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
             <img
@@ -41,35 +40,38 @@ export default function Header() {
             />
           </Link>
 
-          {/* Desktop nav: GERÇEK ekran ortası */}
-          <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-8 text-[15px] font-medium text-slate-700">
-            {navItems.map((item, i) => (
-              <div key={item.href} className="flex items-center gap-8">
-                <Link
-  href={item.href}
-  className={`
-    transition-colors duration-200
-    ${pathname === item.href
-      ? "text-[#ff7a00] font-semibold"
-      : "text-slate-700 hover:text-[#ff7a00]"}
-  `}
->
-  {item.label}
-</Link>
+          {/* Desktop/Tablet nav: tek satır + kendi içinde yatay scroll */}
+          <nav className="hidden md:flex flex-1 min-w-0 justify-center">
+            <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
+              {navItems.map((item, i) => (
+                <div key={item.href} className="flex items-center gap-8">
+                  <Link
+                    href={item.href}
+                    className={`
+                      shrink-0 transition-colors duration-200
+                      ${
+                        pathname === item.href
+                          ? "text-[#ff7a00] font-semibold"
+                          : "text-slate-700 hover:text-[#ff7a00]"
+                      }
+                    `}
+                  >
+                    {item.label}
+                  </Link>
 
-
-                {i !== navItems.length - 1 && (
-                  <span className="h-5 w-px bg-slate-200" />
-                )}
-              </div>
-            ))}
+                  {i !== navItems.length - 1 && (
+                    <span className="h-5 w-px bg-slate-200 shrink-0" />
+                  )}
+                </div>
+              ))}
+            </div>
           </nav>
 
           {/* Mobile hamburger */}
           <button
             type="button"
             aria-label="Menüyü aç"
-            className="md:hidden justify-self-end inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
+            className="md:hidden ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
             onClick={() => setOpen(true)}
           >
             <Menu size={28} />
@@ -87,8 +89,8 @@ export default function Header() {
             onClick={() => setOpen(false)}
           />
 
-          {/* Panel (ARTIK DÜZ BEYAZ - BLUR YOK) */}
-          <div className="absolute inset-0 bg-white">
+          {/* Panel */}
+          <div className="absolute inset-0 bg-[#FAFAF7]">
             {/* Top bar */}
             <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
               <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
@@ -100,7 +102,6 @@ export default function Header() {
                 />
               </Link>
 
-              {/* Close button (DÜZ BEYAZ) */}
               <button
                 type="button"
                 aria-label="Menüyü kapat"
@@ -111,27 +112,26 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Links (KUTUCUKLAR DÜZ BEYAZ - BLUR YOK) */}
+            {/* Links */}
             <nav className="px-6 py-6">
               <ul className="flex flex-col gap-4">
                 {navItems.map((item) => (
                   <li key={item.href}>
-                   <Link
-  href={item.href}
-  onClick={() => setOpen(false)}
-  className={`
-    block w-full
-    rounded-2xl px-5 py-4
-    text-[18px] font-semibold
-    border shadow-sm transition-colors
-    ${
-      pathname === item.href
-        ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
-        : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
-    }
-  `}
->
-
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={`
+                        block w-full
+                        rounded-2xl px-5 py-4
+                        text-[18px] font-semibold
+                        border shadow-sm transition-colors
+                        ${
+                          pathname === item.href
+                            ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
+                            : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
+                        }
+                      `}
+                    >
                       {item.label}
                     </Link>
                   </li>
