@@ -97,14 +97,14 @@ export default function Header() {
           <div className="absolute inset-0 bg-[#FAFAF7]">
             {/* Top bar */}
             <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
-              <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
-                <img
-                  src="/logo.png"
-                  alt="KesioLabs"
-                  className="h-10 w-auto"
-                  draggable={false}
-                />
-              </Link>
+             <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
+  <img
+    src="/logo.png"
+    alt="KesioLabs"
+    className="h-10 w-auto"
+    draggable={false}
+  />
+</Link>
 
               <button
                 type="button"
