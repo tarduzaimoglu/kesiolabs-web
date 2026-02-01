@@ -13,33 +13,52 @@ const navItems = [
   { label: "Hakkımızda", href: "/about" },
 ];
 
-// ✅ Tek kaynaktan logo ölçüsü
 const LOGO_CLASS = "h-10 w-auto"; // 40px
-const SIDE_COL = "w-[180px]"; // menü ortalamak için sağ/sol eş alan
+const SIDE_COL = "w-[180px]";
+
+// Daha premium easing
+const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 function AnimatedBurger({ open }: { open: boolean }) {
-  // Hamburger -> X dönüşümü (pure CSS)
+  // Daha premium: biraz scale + transform-gpu + daha iyi easing
   return (
-    <span className="relative block h-6 w-6" aria-hidden="true">
+    <span
+      className={[
+        "relative block h-6 w-6",
+        "transition-transform duration-300",
+        EASE,
+        open ? "scale-[0.98]" : "scale-100",
+      ].join(" ")}
+      aria-hidden="true"
+    >
+      {/* üst çizgi */}
       <span
         className={[
           "absolute left-0 top-[6px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transition-transform transition-opacity duration-200 ease-out",
-          open ? "translate-y-[6px] rotate-45" : "",
+          "transform-gpu",
+          "transition-all duration-300",
+          EASE,
+          open ? "translate-y-[6px] rotate-45" : "translate-y-0 rotate-0",
         ].join(" ")}
       />
+      {/* orta çizgi */}
       <span
         className={[
           "absolute left-0 top-[12px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transition-opacity duration-150 ease-out",
-          open ? "opacity-0" : "opacity-100",
+          "transform-gpu",
+          "transition-all duration-200",
+          EASE,
+          open ? "opacity-0 scale-x-50" : "opacity-100 scale-x-100",
         ].join(" ")}
       />
+      {/* alt çizgi */}
       <span
         className={[
           "absolute left-0 top-[18px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transition-transform transition-opacity duration-200 ease-out",
-          open ? "-translate-y-[6px] -rotate-45" : "",
+          "transform-gpu",
+          "transition-all duration-300",
+          EASE,
+          open ? "-translate-y-[6px] -rotate-45" : "translate-y-0 rotate-0",
         ].join(" ")}
       />
     </span>
@@ -51,7 +70,6 @@ export default function Header() {
   const pathname = usePathname();
   const activePath = useMemo(() => pathname || "", [pathname]);
 
-  // body scroll lock
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -59,7 +77,6 @@ export default function Header() {
     };
   }, [open]);
 
-  // ESC ile kapat
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -73,14 +90,14 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
         <div className="flex h-20 items-center">
-          {/* Sol: Logo */}
+          {/* Sol */}
           <div className={`flex-shrink-0 ${SIDE_COL}`}>
             <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
               <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
             </Link>
           </div>
 
-          {/* Orta: Desktop/Tablet nav */}
+          {/* Orta */}
           <nav className="hidden md:flex flex-1 min-w-0 justify-center">
             <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
               {navItems.map((item, i) => (
@@ -106,12 +123,15 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Sağ: Boşluk + mobile toggle */}
+          {/* Sağ */}
           <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
             <button
               type="button"
               aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100 transition"
+              className={[
+                "md:hidden inline-flex items-center justify-center rounded-xl p-2",
+                "hover:bg-slate-100 transition-colors",
+              ].join(" ")}
               onClick={() => setOpen((v) => !v)}
             >
               <AnimatedBurger open={open} />
@@ -120,7 +140,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ✅ iOS-style Sheet Menu (sağdan açılır) */}
+      {/* iOS Sheet */}
       <div
         className={[
           "md:hidden fixed inset-0 z-[60]",
@@ -128,48 +148,52 @@ export default function Header() {
         ].join(" ")}
         aria-hidden={!open}
       >
-        {/* Backdrop fade */}
+        {/* Backdrop: daha soft + blur hissi */}
         <button
           aria-label="Menüyü kapat"
           onClick={() => setOpen(false)}
           className={[
-            "absolute inset-0 bg-black/60",
-            "transition-opacity duration-300 ease-out",
+            "absolute inset-0 bg-black/55",
+            "transition-opacity duration-300",
+            EASE,
             open ? "opacity-100" : "opacity-0",
           ].join(" ")}
+          style={{ backdropFilter: "blur(2px)" }}
         />
 
-        {/* Sheet (right side) */}
+        {/* Sheet */}
         <div
           className={[
             "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
-            "bg-[#FAFAF7] border-l border-slate-200",
-            "shadow-2xl",
-            "transition-transform duration-300 ease-out",
-            open ? "translate-x-0" : "translate-x-full",
+            "bg-[#FAFAF7] border-l border-slate-200 shadow-2xl",
+            // daha premium: hafif opacity + translate + scale
+            "transform-gpu transition-all duration-300",
+            EASE,
+            open ? "translate-x-0 opacity-100 scale-100" : "translate-x-full opacity-0 scale-[0.98]",
           ].join(" ")}
           style={{
             paddingTop: "env(safe-area-inset-top)",
             paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
-         {/* Sheet top bar (LOGO YOK, YAZI VAR) */}
-<div className="flex min-h-[88px] items-center justify-between px-6 border-b border-slate-200">
-  <p className="pr-4 text-[13px] leading-relaxed italic text-slate-500">
-    Fikirden ürüne..
-  </p>
+          {/* ✅ Sheet header: ÜST HEADER İLE AYNI YÜKSEKLİK */}
+          <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
+            {/* ✅ Logo yerine motto: font büyüdü + okunabilir soft gri */}
+            <p className="pr-4 text-[15px] leading-snug italic text-slate-500">
+              Üretimin yeni nesli burada başlıyor.
+            </p>
 
-  <button
-    type="button"
-    aria-label="Menüyü kapat"
-    className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
-    onClick={() => setOpen(false)}
-  >
-    <AnimatedBurger open={true} />
-  </button>
-</div>
+            <button
+              type="button"
+              aria-label="Menüyü kapat"
+              className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
+              onClick={() => setOpen(false)}
+            >
+              <AnimatedBurger open={true} />
+            </button>
+          </div>
 
-          {/* Links (stagger + soft) */}
+          {/* Links: daha soft stagger */}
           <nav className="px-6 py-6">
             <ul className="flex flex-col gap-4">
               {navItems.map((item, idx) => {
@@ -178,17 +202,17 @@ export default function Header() {
                   <li
                     key={item.href}
                     className={[
-                      "transition-all duration-300 ease-out",
+                      "transform-gpu transition-all duration-300",
+                      EASE,
                       open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2",
                     ].join(" ")}
-                    style={{ transitionDelay: open ? `${90 + idx * 55}ms` : "0ms" }}
+                    style={{ transitionDelay: open ? `${110 + idx * 55}ms` : "0ms" }}
                   >
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
                       className={`
-                        block w-full
-                        rounded-2xl px-5 py-4
+                        block w-full rounded-2xl px-5 py-4
                         text-[18px] font-semibold
                         border shadow-sm transition-colors
                         ${
