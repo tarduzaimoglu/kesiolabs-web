@@ -27,17 +27,16 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
-      {/* Full width bar */}
       <div className="w-full px-6">
         {/* Sol (logo alanı) - Orta (menü) - Sağ (logo kadar boşluk) */}
         <div className="flex h-20 items-center">
           {/* Sol: Logo */}
-          <div className="flex-shrink-0 w-[140px] lg:w-[160px]">
+          <div className="flex-shrink-0 w-[180px]">
             <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
               <img
                 src="/logo.png"
                 alt="KesioLabs"
-                className="h-8 w-auto"
+                className="h-10 w-auto"
                 draggable={false}
               />
             </Link>
@@ -70,9 +69,8 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Sağ: Logo kadar boşluk (menüyü tam ortalamak için) */}
-          <div className="flex-shrink-0 w-[140px] lg:w-[160px] flex items-center justify-end">
-            {/* Mobile hamburger */}
+          {/* Sağ: Logo kadar boşluk + mobile hamburger */}
+          <div className="flex-shrink-0 w-[180px] flex items-center justify-end">
             <button
               type="button"
               aria-label="Menüyü aç"
@@ -103,12 +101,11 @@ export default function Header() {
                 <img
                   src="/logo.png"
                   alt="KesioLabs"
-                  className="h-8 w-auto"
+                  className="h-10 w-auto"
                   draggable={false}
                 />
               </Link>
 
-              {/* Close button */}
               <button
                 type="button"
                 aria-label="Menüyü kapat"
@@ -151,4 +148,3 @@ export default function Header() {
     </header>
   );
 }
-
