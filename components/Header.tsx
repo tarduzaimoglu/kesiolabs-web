@@ -180,7 +180,7 @@ export default function Header() {
           <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
             {/* ✅ Logo yerine motto: font büyüdü + okunabilir soft gri */}
             <p className="pr-4 text-[15px] leading-snug italic text-slate-500">
-              Üretimin yeni nesli burada başlıyor.
+              Üretimde yeni nesil.
             </p>
 
             <button
