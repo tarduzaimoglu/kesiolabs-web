@@ -10,7 +10,10 @@ body {
   min-height: 100%;
   background-color: #ffffff;
   color: #0f172a;
-  overflow-x: hidden; /* ✅ mobilde sağa kayma / yatay taşma engeli */
+
+  /* ✅ Mobilde sağa taşma engeli
+     hidden yerine clip: nav içi scroll davranışını daha az bozar */
+  overflow-x: clip;
 }
 
 /* Next root */
@@ -18,11 +21,85 @@ body {
   background-color: #ffffff;
 }
 
-/* ✅ Mobil yatay scroll alanında scrollbar gizlemek için */
+/* ✅ Mobil/yatay scroll alanlarında scrollbar gizlemek için */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none; /* IE/Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+/* ============================
+   Premium mobile sheet helpers
+============================ */
+
+/* Soft backdrop (blur + natural opacity) */
+.backdrop-soft {
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Panel edge: very subtle inner gradient */
+.sheet-edge {
+  position: relative;
+}
+.sheet-edge::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 22px;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.06),
+    rgba(15, 23, 42, 0.02),
+    transparent
+  );
+}
+
+/* Spring-ish enter animation (right sheet) */
+@keyframes sheet-in {
+  0% {
+    transform: translateX(100%) scale(0.98);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-10px) scale(1.01);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-in {
+  animation: sheet-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Menu card micro interaction */
+.menu-card-pop {
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.menu-card-pop:hover {
+  transform: translateY(-1px);
+}
+.menu-card-pop:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-in {
+    animation: none !important;
+  }
+  .menu-card-pop {
+    transition: none !important;
+  }
 }
