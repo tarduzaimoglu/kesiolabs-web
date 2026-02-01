@@ -153,23 +153,22 @@ export default function Header() {
             paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
-          {/* Sheet top bar */}
-          <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
-            {/* ✅ Aynı logo ölçüsü */}
-            <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
-              <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
-            </Link>
+         {/* Sheet top bar (LOGO YOK, YAZI VAR) */}
+<div className="flex min-h-[88px] items-center justify-between px-6 border-b border-slate-200">
+  <p className="pr-4 text-[13px] leading-relaxed italic text-slate-500">
+    KesioLabs, dijital üretim teknolojilerini yaratıcı ve mühendislik odaklı
+    tasarım süreçleriyle birleştiren modern bir üretim stüdyosudur.
+  </p>
 
-            {/* Close (aynı toggle butonu, ikon X olmuş durumda) */}
-            <button
-              type="button"
-              aria-label="Menüyü kapat"
-              className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
-              onClick={() => setOpen(false)}
-            >
-              <AnimatedBurger open={true} />
-            </button>
-          </div>
+  <button
+    type="button"
+    aria-label="Menüyü kapat"
+    className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
+    onClick={() => setOpen(false)}
+  >
+    <AnimatedBurger open={true} />
+  </button>
+</div>
 
           {/* Links (stagger + soft) */}
           <nav className="px-6 py-6">
