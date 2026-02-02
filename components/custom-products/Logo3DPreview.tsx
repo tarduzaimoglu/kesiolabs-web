@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Environment, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { removeBackground } from "@imgly/background-removal";
@@ -89,7 +89,6 @@ async function cropTransparentPNG(
   return { blob: outBlob, width: cropW, height: cropH };
 }
 
-// performans: büyük görselleri küçült
 async function downscaleImage(file: File, maxSize = 1024): Promise<Blob> {
   const img = await blobToImage(file);
   const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
@@ -113,9 +112,19 @@ async function downscaleImage(file: File, maxSize = 1024): Promise<Blob> {
   });
 }
 
-/* ---------- 3D object (coaster + front-facing logo) ---------- */
+/* ---------- scene ---------- */
 
-function CoasterWithFrontLogo({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
+function SetInitialCamera() {
+  const { camera } = useThree();
+  useEffect(() => {
+    // ✅ İlk görünüş: logoya tam karşıdan
+    camera.position.set(0, 0.9, 3.0);
+    camera.lookAt(0, 0.45, 0); // logo yüksekliğine bak
+  }, [camera]);
+  return null;
+}
+
+function CoasterScene({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
   const texture = useMemo(() => {
     const t = new THREE.TextureLoader().load(textureUrl);
     t.colorSpace = THREE.SRGBColorSpace;
@@ -126,13 +135,13 @@ function CoasterWithFrontLogo({ textureUrl, aspect }: { textureUrl: string; aspe
     return t;
   }, [textureUrl]);
 
-  // Bardak altlığı ölçüleri
+  // ✅ İnce silindir (coaster)
   const coasterRadius = 1.18;
-  const coasterThickness = 0.18;
+  const coasterThickness = 0.14;
 
-  // Logo'nun maksimum alanı (ekrana bakan plane)
-  const maxW = coasterRadius * 2 * 0.82;
-  const maxH = 0.90;
+  // ✅ Logo: disk yüzeyine yapışık + tamamı gözüksün
+  const maxW = coasterRadius * 2 * 0.82; // daire içine sığdır
+  const maxH = coasterRadius * 2 * 0.35;
 
   let w = maxW;
   let h = w / Math.max(0.01, aspect);
@@ -141,36 +150,30 @@ function CoasterWithFrontLogo({ textureUrl, aspect }: { textureUrl: string; aspe
     w = h * aspect;
   }
 
-  // Plaka üst yüzeyi (Y)
   const topY = coasterThickness / 2;
-
-  // Logo: plakanın üstünden çıkıp ekrana baksın
-  const logoY = topY + 0.55;
-  const logoZ = coasterRadius * 0.05; // çok az öne
+  const logoY = topY + 0.002; // z-fighting önle
 
   return (
     <group>
-      {/* Dairesel plaka */}
+      {/* ✅ Sadece düz, ince plaka. Çember/rim yok. */}
       <mesh castShadow receiveShadow position={[0, 0, 0]}>
         <cylinderGeometry args={[coasterRadius, coasterRadius, coasterThickness, 96]} />
         <meshPhysicalMaterial
           color="#f4f4f5"
           roughness={0.35}
           metalness={0}
-          clearcoat={0.55}
+          clearcoat={0.45}
           clearcoatRoughness={0.25}
-          specularIntensity={0.6}
+          specularIntensity={0.55}
         />
       </mesh>
 
-      {/* Üst yüzeyde hafif “inner bevel” hissi */}
-      <mesh receiveShadow position={[0, topY - 0.01, 0]}>
-        <torusGeometry args={[coasterRadius * 0.78, 0.028, 16, 96]} />
-        <meshStandardMaterial color="#ececee" roughness={0.55} metalness={0} />
-      </mesh>
-
-      {/* Logo (dikey, kameraya tam bakıyor) */}
-      <mesh position={[0, logoY, logoZ]} castShadow receiveShadow>
+      {/* ✅ Logo, plakanın üstüne yapışık (yatay) */}
+      <mesh
+        position={[0, logoY, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
         <planeGeometry args={[w, h]} />
         <meshPhysicalMaterial
           map={texture}
@@ -215,7 +218,7 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
       setBusy(true);
       setProgress(0);
 
-      // UX progress (yumuşak akar)
+      // UX progress
       let p = 0;
       timer = window.setInterval(() => {
         p = Math.min(92, p + Math.random() * 7);
@@ -285,7 +288,8 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
 
       {processedUrl ? (
         <Canvas
-          camera={{ position: [0, 0.95, 3.0], fov: 38 }}
+          shadows
+          camera={{ position: [0, 0.9, 3.0], fov: 38 }}
           gl={{ antialias: true, alpha: true }}
           onCreated={({ gl }) => {
             gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -293,11 +297,26 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
             gl.toneMappingExposure = 1.0;
           }}
         >
+          <SetInitialCamera />
+
           <ambientLight intensity={0.95} />
           <directionalLight position={[3, 4, 3]} intensity={1.15} castShadow />
-          <CoasterWithFrontLogo textureUrl={processedUrl} aspect={aspect} />
+
+          <CoasterScene textureUrl={processedUrl} aspect={aspect} />
+
           <Environment preset="city" />
-          <OrbitControls enabled={false} />
+
+          {/* ✅ Otomatik hareket yok. Kullanıcı sürüklerse döner. */}
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            autoRotate={false}
+            dampingFactor={0.12}
+            enableDamping
+            // sadece Y ekseni etrafında döndürmek istersen:
+            // minPolarAngle={Math.PI / 2.35}
+            // maxPolarAngle={Math.PI / 2.35}
+          />
         </Canvas>
       ) : (
         <div className="h-full w-full flex items-center justify-center text-neutral-500">
