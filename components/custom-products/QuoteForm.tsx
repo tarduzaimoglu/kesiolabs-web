@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Logo3DPreview from "./Logo3DPreview";
 
 type CustomType = {
   id: string;
@@ -83,6 +84,14 @@ export function QuoteForm({
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
       <div className="text-lg font-semibold text-black">Teklif Formu</div>
+      {logoFile ? (
+  <div className="mt-4">
+    <div className="text-sm font-medium text-neutral-700">Logo Önizleme</div>
+    <div className="mt-2">
+      <Logo3DPreview file={logoFile} />
+    </div>
+  </div>
+) : null}
 
       <div className="mt-4">
         <label className="text-sm font-medium text-neutral-700">
