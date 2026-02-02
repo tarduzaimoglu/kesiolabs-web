@@ -60,7 +60,6 @@ async function cropTransparentPNG(
     }
   }
 
-  // tamamen boşsa kırpma yapma
   if (maxX < 0 || maxY < 0) {
     return { blob: pngBlob, width: img.width, height: img.height };
   }
@@ -90,7 +89,7 @@ async function cropTransparentPNG(
   return { blob: outBlob, width: cropW, height: cropH };
 }
 
-// büyük görselleri küçült (performans)
+// performans: büyük görselleri küçült
 async function downscaleImage(file: File, maxSize = 1024): Promise<Blob> {
   const img = await blobToImage(file);
   const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
@@ -106,16 +105,20 @@ async function downscaleImage(file: File, maxSize = 1024): Promise<Blob> {
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("downscale toBlob failed"))), "image/png", 0.92);
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("downscale toBlob failed"))),
+      "image/png",
+      0.92
+    );
   });
 }
 
-/* ---------- 3D object (no rotation) ---------- */
+/* ---------- 3D object (coaster + front-facing logo) ---------- */
 
-function LogoOnStand({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
+function CoasterWithFrontLogo({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
   const texture = useMemo(() => {
     const t = new THREE.TextureLoader().load(textureUrl);
-    t.colorSpace = THREE.SRGBColorSpace; // ✅ renkleri koru
+    t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 8;
     t.generateMipmaps = true;
     t.minFilter = THREE.LinearMipmapLinearFilter;
@@ -123,54 +126,60 @@ function LogoOnStand({ textureUrl, aspect }: { textureUrl: string; aspect: numbe
     return t;
   }, [textureUrl]);
 
-  // Stand ölçüleri
-  const standRadius = 1.05;
-  const standHeight = 0.16;
+  // Bardak altlığı ölçüleri
+  const coasterRadius = 1.18;
+  const coasterThickness = 0.18;
 
-  // Logo'nun sığacağı alan (stand'a göre)
-  const maxW = standRadius * 1.65;
-  const maxH = 0.95;
+  // Logo'nun maksimum alanı (ekrana bakan plane)
+  const maxW = coasterRadius * 2 * 0.82;
+  const maxH = 0.90;
 
   let w = maxW;
   let h = w / Math.max(0.01, aspect);
-
   if (h > maxH) {
     h = maxH;
     w = h * aspect;
   }
 
+  // Plaka üst yüzeyi (Y)
+  const topY = coasterThickness / 2;
+
+  // Logo: plakanın üstünden çıkıp ekrana baksın
+  const logoY = topY + 0.55;
+  const logoZ = coasterRadius * 0.05; // çok az öne
+
   return (
     <group>
-      {/* Stand: plastik çember */}
-      <mesh castShadow receiveShadow position={[0, -0.65, 0]}>
-        <cylinderGeometry args={[standRadius, standRadius, standHeight, 64]} />
+      {/* Dairesel plaka */}
+      <mesh castShadow receiveShadow position={[0, 0, 0]}>
+        <cylinderGeometry args={[coasterRadius, coasterRadius, coasterThickness, 96]} />
         <meshPhysicalMaterial
-          color="#f3f3f3"
+          color="#f4f4f5"
           roughness={0.35}
           metalness={0}
-          clearcoat={0.7}
+          clearcoat={0.55}
           clearcoatRoughness={0.25}
-          specularIntensity={0.7}
+          specularIntensity={0.6}
         />
       </mesh>
 
-      {/* Rim */}
-      <mesh position={[0, -0.57, 0]} receiveShadow>
-        <torusGeometry args={[standRadius * 0.82, 0.03, 16, 64]} />
-        <meshStandardMaterial roughness={0.5} metalness={0} color="#e9e9e9" />
+      {/* Üst yüzeyde hafif “inner bevel” hissi */}
+      <mesh receiveShadow position={[0, topY - 0.01, 0]}>
+        <torusGeometry args={[coasterRadius * 0.78, 0.028, 16, 96]} />
+        <meshStandardMaterial color="#ececee" roughness={0.55} metalness={0} />
       </mesh>
 
-      {/* Logo */}
-      <mesh position={[0, -0.12, 0.10]} castShadow receiveShadow>
+      {/* Logo (dikey, kameraya tam bakıyor) */}
+      <mesh position={[0, logoY, logoZ]} castShadow receiveShadow>
         <planeGeometry args={[w, h]} />
         <meshPhysicalMaterial
           map={texture}
           transparent
           alphaTest={0.02}
-          roughness={0.24}
+          roughness={0.25}
           metalness={0}
-          clearcoat={0.35}
-          clearcoatRoughness={0.22}
+          clearcoat={0.25}
+          clearcoatRoughness={0.28}
           toneMapped={false}
         />
       </mesh>
@@ -214,23 +223,18 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
       }, 250);
 
       try {
-        // ✅ önce küçült (performans)
         const resized = await downscaleImage(file, 1024);
-
         const inputUrl = URL.createObjectURL(resized);
 
-        // ✅ arka plan kaldır
         const removedBlob = await removeBackground(inputUrl);
         URL.revokeObjectURL(inputUrl);
 
-        // ✅ kırp
         const cropped = await cropTransparentPNG(removedBlob, 8, 12);
 
         revoke = URL.createObjectURL(cropped.blob);
         setAspect(cropped.width / cropped.height);
         setProcessedUrl(revoke);
 
-        // tamamla
         setProgress(100);
       } catch (e) {
         console.error(e);
@@ -238,8 +242,6 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
       } finally {
         if (timer) window.clearInterval(timer);
         setBusy(false);
-
-        // progress bar kaybolsun
         setTimeout(() => setProgress(0), 400);
       }
     }
@@ -283,7 +285,7 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
 
       {processedUrl ? (
         <Canvas
-          camera={{ position: [0, 0, 3.15], fov: 45 }}
+          camera={{ position: [0, 0.95, 3.0], fov: 38 }}
           gl={{ antialias: true, alpha: true }}
           onCreated={({ gl }) => {
             gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -291,11 +293,11 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
             gl.toneMappingExposure = 1.0;
           }}
         >
-          <ambientLight intensity={0.9} />
-          <directionalLight position={[3, 3, 3]} intensity={1.2} />
-          <LogoOnStand textureUrl={processedUrl} aspect={aspect} />
+          <ambientLight intensity={0.95} />
+          <directionalLight position={[3, 4, 3]} intensity={1.15} castShadow />
+          <CoasterWithFrontLogo textureUrl={processedUrl} aspect={aspect} />
           <Environment preset="city" />
-          <OrbitControls enableZoom={false} enablePan={false} />
+          <OrbitControls enabled={false} />
         </Canvas>
       ) : (
         <div className="h-full w-full flex items-center justify-center text-neutral-500">

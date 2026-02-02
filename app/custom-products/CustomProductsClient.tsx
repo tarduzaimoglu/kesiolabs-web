@@ -44,14 +44,12 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
   const acceptFile = (f: File | null | undefined) => {
     if (!f) return;
 
-    // basit doğrulama
     const okTypes = ["image/png", "image/jpeg", "application/pdf"];
     if (!okTypes.includes(f.type)) {
       alert("Lütfen PNG, JPG veya PDF yükleyin.");
       return;
     }
 
-    // örnek limit
     const maxMb = 12;
     if (f.size > maxMb * 1024 * 1024) {
       alert(`Dosya çok büyük. Lütfen ${maxMb}MB altı yükleyin.`);
@@ -74,7 +72,7 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="text-lg font-semibold text-black">Logonuzu buraya yükleyin</div>
 
-          {/* Mini akış (A) */}
+          {/* Mini akış */}
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
               <div className="text-xs font-semibold text-neutral-900">1</div>
@@ -93,7 +91,7 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
             </div>
           </div>
 
-          {/* Drag&Drop (C) */}
+          {/* Drag&Drop */}
           <div
             className={[
               "mt-5 rounded-2xl border-2 border-dashed p-5 transition",
@@ -124,9 +122,7 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
           >
             <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="text-sm font-medium text-neutral-900">
-                  Dosyayı buraya sürükleyip bırakın
-                </div>
+                <div className="text-sm font-medium text-neutral-900">Dosyayı buraya sürükleyip bırakın</div>
                 <div className="mt-1 text-xs text-neutral-600">
                   Tercih edilen: şeffaf PNG. Arka plan otomatik kaldırılır.
                 </div>
@@ -143,25 +139,20 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
               </label>
             </div>
 
-            {/* chipler */}
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">PNG</span>
               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">JPG</span>
               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">PDF</span>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
-                Önerilen: 512px+
-              </span>
+              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">Önerilen: 512px+</span>
             </div>
           </div>
 
-          {/* Yüklü dosya kartı */}
+          {/* Dosya kartı */}
           {logoFile ? (
             <div className="mt-5 rounded-2xl border border-neutral-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-neutral-900">
-                    {logoFile.name}
-                  </div>
+                  <div className="text-sm font-semibold text-neutral-900">{logoFile.name}</div>
                   <div className="mt-1 text-xs text-neutral-600">
                     {fileExt(logoFile.name)} • {formatBytes(logoFile.size)}
                   </div>
@@ -189,9 +180,7 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
               </div>
             </div>
           ) : (
-            <div className="mt-4 text-xs text-neutral-600">
-              JPG, PNG veya PDF formatında logo yükleyin
-            </div>
+            <div className="mt-4 text-xs text-neutral-600">JPG, PNG veya PDF formatında logo yükleyin</div>
           )}
         </div>
 
@@ -211,11 +200,7 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
           </div>
 
           <div className="mt-8">
-            <ProductTypeGrid
-              types={types}
-              selectedIds={selectedTypeIds}
-              onToggle={toggleType}
-            />
+            <ProductTypeGrid types={types} selectedIds={selectedTypeIds} onToggle={toggleType} />
           </div>
 
           <div className="mt-10">
