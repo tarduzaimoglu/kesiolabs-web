@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -18,7 +18,7 @@ type Props = {
 const BED_SIZE_MM = 256;
 const GRID_DIV = 16;
 
-// iOS WebKit daha hassas; istersen limite çek
+// iOS WebKit daha hassas; erken limit
 const IOS_MAX_VERTICES = 800_000;
 
 function isIOS() {
@@ -44,6 +44,19 @@ function StlMesh({
   const geomRef = useRef<THREE.BufferGeometry | null>(null);
   const [yOffset, setYOffset] = useState(0);
 
+  // ✅ Material'ı tek instance tut (iOS GPU memory leak engeli)
+  const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
+  // Material'ı render'dan önce garanti oluştur (useEffect beklemeden)
+  if (!matRef.current) {
+    matRef.current = new THREE.MeshStandardMaterial({
+      roughness: 0.35,
+      metalness: 0.05,
+    });
+  }
+  // Rengi güncelle
+  matRef.current.color.set(colorHex);
+
   // ✅ URL değişince eski geometry’yi hemen temizle (RAM/GPU leak önler)
   useEffect(() => {
     return () => {
@@ -55,9 +68,16 @@ function StlMesh({
     };
   }, [url]);
 
+  // ✅ Unmount'ta material dispose
+  useEffect(() => {
+    return () => {
+      matRef.current?.dispose();
+      matRef.current = null;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-
     const loader = new STLLoader();
 
     loader.load(
@@ -75,8 +95,7 @@ function StlMesh({
             geomRef.current = null;
           }
 
-          // ✅ iOS için erken komplekslik kontrolü (opsiyonel)
-          // (position attribute yoksa zaten hata)
+          // ✅ iOS için erken komplekslik kontrolü
           const pos = geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
           if (pos?.count && isIOS() && pos.count > IOS_MAX_VERTICES) {
             geometry.dispose();
@@ -87,7 +106,7 @@ function StlMesh({
           geometry.computeVertexNormals();
           geometry.center();
 
-          // metrikler (computeMetricsFromGeometry iOS-safe olmalı: clone yapmamalı)
+          // ✅ metrikler: stlMetrics.ts artık iOS-safe (toNonIndexed yok)
           const m = computeMetricsFromGeometry(geometry);
           onMetrics(m);
 
@@ -98,6 +117,7 @@ function StlMesh({
             const height = bb.max.y - bb.min.y;
             const centerY = (bb.max.y + bb.min.y) * 0.5;
 
+            // Zemin üstüne oturt
             const offset = -bb.min.y;
             setYOffset(offset);
 
@@ -111,7 +131,6 @@ function StlMesh({
           geomRef.current = geometry;
           setGeom(geometry);
         } catch (e: any) {
-          // ✅ hata olursa geometry’yi bırakma
           geometry.dispose();
 
           const msg = String(e?.message || e);
@@ -131,40 +150,11 @@ function StlMesh({
     };
   }, [url, onMetrics, onError, onBounds]);
 
-  const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
-
-useEffect(() => {
-  if (!matRef.current) {
-    matRef.current = new THREE.MeshStandardMaterial({
-      roughness: 0.35,
-      metalness: 0.05,
-    });
-  }
-  matRef.current.color.set(colorHex);
-}, [colorHex]);
-
-useEffect(() => {
-  return () => {
-    matRef.current?.dispose();
-    matRef.current = null;
-  };
-}, []);
-
-  // ✅ component unmount olursa geometry dispose
-  useEffect(() => {
-    return () => {
-      if (geomRef.current) {
-        geomRef.current.dispose();
-        geomRef.current = null;
-      }
-    };
-  }, []);
-
   if (!geom) return null;
 
   return (
     <group position={[0, yOffset, 0]}>
-      <mesh geometry={geom} material={material} castShadow receiveShadow />
+      <mesh geometry={geom} material={matRef.current!} castShadow receiveShadow />
     </group>
   );
 }
