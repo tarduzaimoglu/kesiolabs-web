@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
-import { computeMetricsFromGeometry } from "./stlMetrics";
 
 type Props = {
   fileUrl: string | null;
@@ -14,68 +13,45 @@ type Props = {
   onError: (code: string) => void;
 };
 
-// Bambu Lab P1S bed size ~256x256 mm
 const BED_SIZE_MM = 256;
 const GRID_DIV = 16;
 
-// iOS WebKit daha hassas; erken limit
-const IOS_MAX_VERTICES = 800_000;
-
-function isIOS() {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  return /iPhone|iPad|iPod/i.test(ua);
-}
-
-function StlMesh({
+function StlMeshView({
   url,
   colorHex,
-  onMetrics,
-  onError,
-  onBounds,
+  yOffset,
 }: {
   url: string;
   colorHex: string;
-  onMetrics: Props["onMetrics"];
-  onError: Props["onError"];
-  onBounds: (b: { height: number; centerY: number }) => void;
+  yOffset: number;
 }) {
   const [geom, setGeom] = useState<THREE.BufferGeometry | null>(null);
   const geomRef = useRef<THREE.BufferGeometry | null>(null);
-  const [yOffset, setYOffset] = useState(0);
 
-  // ✅ Material'ı tek instance tut (iOS GPU memory leak engeli)
+  // ✅ Material tek instance (iOS GPU leak engeli)
   const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
-
-  // Material'ı render'dan önce garanti oluştur (useEffect beklemeden)
   if (!matRef.current) {
     matRef.current = new THREE.MeshStandardMaterial({
       roughness: 0.35,
       metalness: 0.05,
     });
   }
-  // Rengi güncelle
   matRef.current.color.set(colorHex);
 
-  // ✅ URL değişince eski geometry’yi hemen temizle (RAM/GPU leak önler)
+  // ✅ Unmount/cleanup
   useEffect(() => {
     return () => {
-      if (geomRef.current) {
-        geomRef.current.dispose();
-        geomRef.current = null;
-      }
-      setGeom(null);
-    };
-  }, [url]);
+      geomRef.current?.dispose();
+      geomRef.current = null;
 
-  // ✅ Unmount'ta material dispose
-  useEffect(() => {
-    return () => {
       matRef.current?.dispose();
       matRef.current = null;
+
+      setGeom(null);
     };
   }, []);
 
+  // ✅ URL değişince STL'yi yükle (sadece görüntüleme için)
   useEffect(() => {
     let cancelled = false;
     const loader = new STLLoader();
@@ -88,67 +64,27 @@ function StlMesh({
           return;
         }
 
-        try {
-          // ✅ Eski geometry varsa dispose et
-          if (geomRef.current) {
-            geomRef.current.dispose();
-            geomRef.current = null;
-          }
+        // önceki geometry'yi temizle
+        geomRef.current?.dispose();
+        geomRef.current = null;
 
-          // ✅ iOS için erken komplekslik kontrolü
-          const pos = geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
-          if (pos?.count && isIOS() && pos.count > IOS_MAX_VERTICES) {
-            geometry.dispose();
-            onError("TOO_COMPLEX");
-            return;
-          }
+        geometry.computeVertexNormals();
+        geometry.center();
 
-          geometry.computeVertexNormals();
-          geometry.center();
-
-          // ✅ metrikler: stlMetrics.ts artık iOS-safe (toNonIndexed yok)
-          const m = computeMetricsFromGeometry(geometry);
-          onMetrics(m);
-
-          geometry.computeBoundingBox();
-          const bb = geometry.boundingBox;
-
-          if (bb) {
-            const height = bb.max.y - bb.min.y;
-            const centerY = (bb.max.y + bb.min.y) * 0.5;
-
-            // Zemin üstüne oturt
-            const offset = -bb.min.y;
-            setYOffset(offset);
-
-            onBounds({ height, centerY });
-          } else {
-            setYOffset(0);
-            onBounds({ height: 120, centerY: 0 });
-          }
-
-          // ✅ state + ref
-          geomRef.current = geometry;
-          setGeom(geometry);
-        } catch (e: any) {
-          geometry.dispose();
-
-          const msg = String(e?.message || e);
-          if (msg.includes("TOO_COMPLEX")) onError("TOO_COMPLEX");
-          else onError("STL_UNREADABLE");
-        }
+        geomRef.current = geometry;
+        setGeom(geometry);
       },
       undefined,
       () => {
-        if (cancelled) return;
-        onError("UPLOAD_FAILED");
+        // görüntüleme yüklemesi başarısızsa burada sessiz kalıyoruz
+        // çünkü hata/validasyon worker tarafında zaten dönüyor
       }
     );
 
     return () => {
       cancelled = true;
     };
-  }, [url, onMetrics, onError, onBounds]);
+  }, [url]);
 
   if (!geom) return null;
 
@@ -161,19 +97,71 @@ function StlMesh({
 
 export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Props) {
   const [targetY, setTargetY] = useState(60);
+  const [yOffset, setYOffset] = useState(0);
+
+  const workerRef = useRef<Worker | null>(null);
+
+  // ✅ Worker'ı bir kez başlat
+  useEffect(() => {
+    workerRef.current = new Worker(new URL("./stlWorker.ts", import.meta.url), { type: "module" });
+    return () => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  // ✅ Dosya değişince worker’dan metrik + bounds al
+  useEffect(() => {
+    if (!fileUrl) return;
+
+    const w = workerRef.current;
+    if (!w) return;
+
+    let alive = true;
+
+    const onMsg = (ev: MessageEvent<any>) => {
+      if (!alive) return;
+      const data = ev.data;
+
+      if (data?.type === "err") {
+        onError(data.code || "STL_UNREADABLE");
+        return;
+      }
+
+      if (data?.type === "ok") {
+        onMetrics(data.metrics);
+
+        const h = data.bounds?.height ?? 120;
+        const next = Math.max(35, Math.min(140, h * 0.45));
+        setTargetY(next);
+
+        setYOffset(data.bounds?.yOffset ?? 0);
+      }
+    };
+
+    w.addEventListener("message", onMsg);
+    w.postMessage({ type: "parse", url: fileUrl });
+
+    return () => {
+      alive = false;
+      w.removeEventListener("message", onMsg);
+    };
+  }, [fileUrl, onMetrics, onError]);
 
   return (
-    <Canvas shadows camera={{ fov: 38, position: [-300, 350, 700] }} className="h-full w-full">
+    <Canvas
+      // ✅ iOS için hafif ayarlar
+      shadows={false}
+      dpr={[1, 1.5]}
+      frameloop="demand"
+      gl={{ antialias: false, powerPreference: "low-power" }}
+      camera={{ fov: 38, position: [-300, 350, 700] }}
+      className="h-full w-full"
+    >
       <color attach="background" args={["#f4f4f4"]} />
 
-      <ambientLight intensity={0.6} />
-      <directionalLight
-        position={[6, 12, 6]}
-        intensity={1.2}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
+      <ambientLight intensity={0.65} />
+      <directionalLight position={[6, 12, 6]} intensity={1.1} />
 
       <group position={[0, 0, 0]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, -0.6, 0]}>
@@ -185,18 +173,7 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
       </group>
 
       <Suspense fallback={null}>
-        {fileUrl && (
-          <StlMesh
-            url={fileUrl}
-            colorHex={colorHex}
-            onMetrics={onMetrics}
-            onError={onError}
-            onBounds={({ height }) => {
-              const next = Math.max(35, Math.min(140, height * 0.45));
-              setTargetY(next);
-            }}
-          />
-        )}
+        {fileUrl && <StlMeshView url={fileUrl} colorHex={colorHex} yOffset={yOffset} />}
       </Suspense>
 
       <OrbitControls
@@ -204,7 +181,7 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
         enablePan={false}
         enableDamping
         dampingFactor={0.08}
-        rotateSpeed={0.30}
+        rotateSpeed={0.3}
         minDistance={120}
         maxDistance={1400}
       />

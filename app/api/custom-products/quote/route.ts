@@ -21,21 +21,46 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ SMTP ENV doğrulama (localhost'a düşmesin)
+    const SMTP_HOST = process.env.SMTP_HOST;
+    const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+    const SMTP_USER = process.env.SMTP_USER;
+    const SMTP_PASS = process.env.SMTP_PASS;
+
+    if (!SMTP_HOST) throw new Error("SMTP_HOST missing");
+    if (!SMTP_USER) throw new Error("SMTP_USER missing");
+    if (!SMTP_PASS) throw new Error("SMTP_PASS missing");
+
+    // ✅ 465 => secure true, 587 => false (istersen SMTP_SECURE ile override)
+    const secureDefault = SMTP_PORT === 465;
+    const SMTP_SECURE =
+      process.env.SMTP_SECURE != null
+        ? String(process.env.SMTP_SECURE) === "true"
+        : secureDefault;
+
+    // ✅ Gönderen/Alıcı adresleri (senin istediğin düzen)
+    // MAIL_FROM: "KesioLabs Forms <kesiolabsforms@gmail.com>"
+    // MAIL_TO: kesiolabs.contact@gmail.com
+    const FROM =
+      process.env.MAIL_FROM || process.env.SMTP_FROM || SMTP_USER;
+    const TO =
+      process.env.MAIL_TO || process.env.CONTACT_TO || SMTP_USER;
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: String(process.env.SMTP_SECURE || "true") === "true",
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: SMTP_USER,
+        pass: SMTP_PASS,
       },
     });
 
     const attachments: any[] = [];
 
+    // Logo dosyası ek (opsiyonel) — 6MB limit
     if (logoFile && typeof logoFile.arrayBuffer === "function") {
       const buf = Buffer.from(await logoFile.arrayBuffer());
-      // Çok büyük dosya gelirse mail şişmesin diye basit limit:
       if (buf.length <= 6 * 1024 * 1024) {
         attachments.push({
           filename: logoFile.name || "logo",
@@ -56,8 +81,8 @@ export async function POST(req: Request) {
     `;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: process.env.CONTACT_TO || process.env.SMTP_USER,
+      from: FROM,
+      to: TO,
       replyTo: email, // kullanıcıya cevap vermeyi kolaylaştırır
       subject,
       html,
@@ -68,7 +93,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error("quote mail error:", err);
     return Response.json(
-      { ok: false, message: "Mail gönderilemedi." },
+      { ok: false, message: "Mail gönderilemedi.", debug: err?.message || String(err) },
       { status: 500 }
     );
   }

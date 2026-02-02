@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navItems = [
@@ -13,62 +14,9 @@ const navItems = [
   { label: "Hakkımızda", href: "/about" },
 ];
 
-const LOGO_CLASS = "h-10 w-auto"; // 40px
-const SIDE_COL = "w-[180px]";
-
-// Daha premium easing
-const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
-
-function AnimatedBurger({ open }: { open: boolean }) {
-  // Daha premium: biraz scale + transform-gpu + daha iyi easing
-  return (
-    <span
-      className={[
-        "relative block h-6 w-6",
-        "transition-transform duration-300",
-        EASE,
-        open ? "scale-[0.98]" : "scale-100",
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      {/* üst çizgi */}
-      <span
-        className={[
-          "absolute left-0 top-[6px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transform-gpu",
-          "transition-all duration-300",
-          EASE,
-          open ? "translate-y-[6px] rotate-45" : "translate-y-0 rotate-0",
-        ].join(" ")}
-      />
-      {/* orta çizgi */}
-      <span
-        className={[
-          "absolute left-0 top-[12px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transform-gpu",
-          "transition-all duration-200",
-          EASE,
-          open ? "opacity-0 scale-x-50" : "opacity-100 scale-x-100",
-        ].join(" ")}
-      />
-      {/* alt çizgi */}
-      <span
-        className={[
-          "absolute left-0 top-[18px] h-[2px] w-6 rounded-full bg-slate-700",
-          "transform-gpu",
-          "transition-all duration-300",
-          EASE,
-          open ? "-translate-y-[6px] -rotate-45" : "translate-y-0 rotate-0",
-        ].join(" ")}
-      />
-    </span>
-  );
-}
-
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const activePath = useMemo(() => pathname || "", [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -77,27 +25,22 @@ export default function Header() {
     };
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
-        <div className="flex h-20 items-center">
-          {/* Sol */}
-          <div className={`flex-shrink-0 ${SIDE_COL}`}>
-            <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
-              <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
-            </Link>
-          </div>
+        {/* Tek satır: Logo - Nav (scroll) - Mobile button */}
+        <div className="flex h-20 items-center gap-4">
+          {/* Logo */}
+          <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
+            <img
+              src="/logo.png"
+              alt="KesioLabs"
+              className="h-8 w-auto"
+              draggable={false}
+            />
+          </Link>
 
-          {/* Orta */}
+          {/* Desktop/Tablet nav: tek satır + kendi içinde yatay scroll */}
           <nav className="hidden md:flex flex-1 min-w-0 justify-center">
             <div className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap">
               {navItems.map((item, i) => (
@@ -107,7 +50,7 @@ export default function Header() {
                     className={`
                       shrink-0 transition-colors duration-200
                       ${
-                        activePath === item.href
+                        pathname === item.href
                           ? "text-[#ff7a00] font-semibold"
                           : "text-slate-700 hover:text-[#ff7a00]"
                       }
@@ -115,6 +58,7 @@ export default function Header() {
                   >
                     {item.label}
                   </Link>
+
                   {i !== navItems.length - 1 && (
                     <span className="h-5 w-px bg-slate-200 shrink-0" />
                   )}
@@ -123,116 +67,80 @@ export default function Header() {
             </div>
           </nav>
 
-          {/* Sağ */}
-          <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
-            <button
-              type="button"
-              aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-              className={[
-                "md:hidden inline-flex items-center justify-center rounded-xl p-2",
-                "hover:bg-slate-100 transition-colors",
-              ].join(" ")}
-              onClick={() => setOpen((v) => !v)}
-            >
-              <AnimatedBurger open={open} />
-            </button>
-          </div>
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            aria-label="Menüyü aç"
+            className="md:hidden ml-auto inline-flex items-center justify-center rounded-xl p-2 text-slate-700 hover:bg-slate-100"
+            onClick={() => setOpen(true)}
+          >
+            <Menu size={28} />
+          </button>
         </div>
       </div>
 
-      {/* iOS Sheet */}
-      <div
-        className={[
-          "md:hidden fixed inset-0 z-[60]",
-          open ? "pointer-events-auto" : "pointer-events-none",
-        ].join(" ")}
-        aria-hidden={!open}
-      >
-        {/* Backdrop: daha soft + blur hissi */}
-        <button
-          aria-label="Menüyü kapat"
-          onClick={() => setOpen(false)}
-         className={[
-  "absolute inset-0 backdrop-soft",
-  "transition-opacity duration-300",
-  EASE,
-  open ? "opacity-100" : "opacity-0",
-].join(" ")}
-          style={{ backdropFilter: "blur(2px)" }}
-        />
+      {/* Mobile Menu */}
+      {open && (
+        <div className="md:hidden fixed inset-0 z-[60]">
+          {/* Backdrop */}
+          <button
+            aria-label="Menüyü kapat"
+            className="absolute inset-0 bg-black/65"
+            onClick={() => setOpen(false)}
+          />
 
-        {/* Sheet */}
-        <div
-          className={[
-  "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
-  "bg-[#FAFAF7] border-l border-slate-200 shadow-2xl sheet-edge",
-  "transform-gpu transition-all duration-300",
-  EASE,
-  open
-    ? "translate-x-0 opacity-100 scale-100 animate-sheet-in"
-    : "translate-x-full opacity-0 scale-[0.98]",
-].join(" ")}
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
-        >
-          {/* ✅ Sheet header: ÜST HEADER İLE AYNI YÜKSEKLİK */}
-          <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
-            {/* ✅ Logo yerine motto: font büyüdü + okunabilir soft gri */}
-            <p className="pr-4 text-[15px] leading-snug italic text-slate-500">
-              Üretimde yeni nesil.
-            </p>
+          {/* Panel */}
+          <div className="absolute inset-0 bg-[#FAFAF7]">
+            {/* Top bar */}
+            <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200">
+              <Link href="/" className="shrink-0" onClick={() => setOpen(false)}>
+                <img
+                  src="/logo.png"
+                  alt="KesioLabs"
+                  className="h-8 w-auto"
+                  draggable={false}
+                />
+              </Link>
 
-            <button
-              type="button"
-              aria-label="Menüyü kapat"
-              className="inline-flex items-center justify-center rounded-2xl p-2 hover:bg-slate-100 transition"
-              onClick={() => setOpen(false)}
-            >
-              <AnimatedBurger open={true} />
-            </button>
-          </div>
+              <button
+                type="button"
+                aria-label="Menüyü kapat"
+                className="inline-flex items-center justify-center rounded-2xl p-3 text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                onClick={() => setOpen(false)}
+              >
+                <X size={28} />
+              </button>
+            </div>
 
-          {/* Links: daha soft stagger */}
-          <nav className="px-6 py-6">
-            <ul className="flex flex-col gap-4">
-              {navItems.map((item, idx) => {
-                const isActive = activePath === item.href;
-                return (
-                  <li
-                    key={item.href}
-                    className={[
-                      "transform-gpu transition-all duration-300",
-                      EASE,
-                      open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2",
-                    ].join(" ")}
-                    style={{ transitionDelay: open ? `${110 + idx * 55}ms` : "0ms" }}
-                  >
+            {/* Links */}
+            <nav className="px-6 py-6">
+              <ul className="flex flex-col gap-4">
+                {navItems.map((item) => (
+                  <li key={item.href}>
                     <Link
-  href={item.href}
-  onClick={() => setOpen(false)}
-  className={`
-    menu-card-pop
-    block w-full rounded-2xl px-5 py-4
-    text-[18px] font-semibold
-    border shadow-sm transition-colors
-    ${
-      isActive
-        ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
-        : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
-    }
-  `}
->
-  {item.label}
-</Link>
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={`
+                        block w-full
+                        rounded-2xl px-5 py-4
+                        text-[18px] font-semibold
+                        border shadow-sm transition-colors
+                        ${
+                          pathname === item.href
+                            ? "text-[#ff7a00] border-[#ff7a00] bg-orange-50"
+                            : "text-slate-900 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#ff7a00]"
+                        }
+                      `}
+                    >
+                      {item.label}
+                    </Link>
                   </li>
-                );
-              })}
-            </ul>
-          </nav>
+                ))}
+              </ul>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
