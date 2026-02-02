@@ -2,16 +2,18 @@ import * as THREE from "three";
 
 export const MAX_VERTICES = 2_000_000;
 
-export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
-  // ✅ iOS için kritik: non-indexed ise ASLA clone yapma
-  // Index varsa non-indexed'e çevirmek metrik için gerekli olabilir.
-  const g = geom.index ? geom.toNonIndexed() : geom;
+// iOS için güvenli üçgen limiti (istersen ayarla)
+const MAX_TRIANGLES = 1_200_000;
 
-  const pos = g.getAttribute("position");
+export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
+  const pos = geom.getAttribute("position") as THREE.BufferAttribute | undefined;
   if (!pos) throw new Error("NO_POSITION");
 
-  const vertexCount = pos.count;
-  if (vertexCount > MAX_VERTICES) throw new Error("TOO_COMPLEX");
+  if (pos.count > MAX_VERTICES) throw new Error("TOO_COMPLEX");
+
+  const index = geom.getIndex();
+  const triCount = index ? index.count / 3 : pos.count / 3;
+  if (triCount > MAX_TRIANGLES) throw new Error("TOO_COMPLEX");
 
   let volume = 0;
   let area = 0;
@@ -24,10 +26,26 @@ export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
   const ac = new THREE.Vector3();
   const cross = new THREE.Vector3();
 
-  for (let i = 0; i < pos.count; i += 3) {
-    a.fromBufferAttribute(pos as any, i);
-    b.fromBufferAttribute(pos as any, i + 1);
-    c.fromBufferAttribute(pos as any, i + 2);
+  const setV = (i: number, out: THREE.Vector3) => {
+    out.set(pos.getX(i), pos.getY(i), pos.getZ(i));
+  };
+
+  const triLoop = (fn: (i0: number, i1: number, i2: number) => void) => {
+    if (index) {
+      for (let i = 0; i < index.count; i += 3) {
+        fn(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+      }
+    } else {
+      for (let i = 0; i < pos.count; i += 3) {
+        fn(i, i + 1, i + 2);
+      }
+    }
+  };
+
+  triLoop((i0, i1, i2) => {
+    setV(i0, a);
+    setV(i1, b);
+    setV(i2, c);
 
     ab.subVectors(b, a);
     ac.subVectors(c, a);
@@ -37,15 +55,14 @@ export function computeMetricsFromGeometry(geom: THREE.BufferGeometry) {
     const triArea = crossLen * 0.5;
     area += triArea;
 
-    // Signed volume contribution
     volume += a.dot(cross) / 6.0;
 
-    // ✅ normalize() yerine: abs(n.y) = abs(cross.y)/|cross|
     if (crossLen > 0) {
+      // senin mevcut yaklaşımını koruyoruz
       const horizWeight = Math.abs(cross.y) / crossLen;
       horizArea += triArea * horizWeight;
     }
-  }
+  });
 
   return {
     volumeMM3: Math.abs(volume),
