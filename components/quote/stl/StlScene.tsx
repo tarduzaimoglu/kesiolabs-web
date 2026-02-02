@@ -131,15 +131,24 @@ function StlMesh({
     };
   }, [url, onMetrics, onError, onBounds]);
 
-  const material = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: new THREE.Color(colorHex),
-        roughness: 0.35,
-        metalness: 0.05,
-      }),
-    [colorHex]
-  );
+  const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
+useEffect(() => {
+  if (!matRef.current) {
+    matRef.current = new THREE.MeshStandardMaterial({
+      roughness: 0.35,
+      metalness: 0.05,
+    });
+  }
+  matRef.current.color.set(colorHex);
+}, [colorHex]);
+
+useEffect(() => {
+  return () => {
+    matRef.current?.dispose();
+    matRef.current = null;
+  };
+}, []);
 
   // ✅ component unmount olursa geometry dispose
   useEffect(() => {
