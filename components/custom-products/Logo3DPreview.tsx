@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, { useEffect, useMemo, useState } from "react";
+import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { removeBackground } from "@imgly/background-removal";
@@ -90,11 +90,29 @@ async function cropTransparentPNG(
   return { blob: outBlob, width: cropW, height: cropH };
 }
 
-/* ---------- 3D object ---------- */
+// büyük görselleri küçült (performans)
+async function downscaleImage(file: File, maxSize = 1024): Promise<Blob> {
+  const img = await blobToImage(file);
+  const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+  if (scale === 1) return file;
 
-function RotatingLogo({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
-  const groupRef = useRef<THREE.Group>(null);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
 
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("No 2D context for downscale");
+
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("downscale toBlob failed"))), "image/png", 0.92);
+  });
+}
+
+/* ---------- 3D object (no rotation) ---------- */
+
+function LogoOnStand({ textureUrl, aspect }: { textureUrl: string; aspect: number }) {
   const texture = useMemo(() => {
     const t = new THREE.TextureLoader().load(textureUrl);
     t.colorSpace = THREE.SRGBColorSpace; // ✅ renkleri koru
@@ -105,41 +123,55 @@ function RotatingLogo({ textureUrl, aspect }: { textureUrl: string; aspect: numb
     return t;
   }, [textureUrl]);
 
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.y += delta * 0.35; // ✅ yavaş dönüş
-  });
+  // Stand ölçüleri
+  const standRadius = 1.05;
+  const standHeight = 0.16;
 
-  const h = 1.05;
-  const w = Math.max(1.2, h * aspect); // aşırı dar olmasın
+  // Logo'nun sığacağı alan (stand'a göre)
+  const maxW = standRadius * 1.65;
+  const maxH = 0.95;
+
+  let w = maxW;
+  let h = w / Math.max(0.01, aspect);
+
+  if (h > maxH) {
+    h = maxH;
+    w = h * aspect;
+  }
 
   return (
-    <group ref={groupRef}>
-      {/* Plastik gövde */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[w * 1.06, h * 1.06, 0.10]} />
+    <group>
+      {/* Stand: plastik çember */}
+      <mesh castShadow receiveShadow position={[0, -0.65, 0]}>
+        <cylinderGeometry args={[standRadius, standRadius, standHeight, 64]} />
         <meshPhysicalMaterial
           color="#f3f3f3"
           roughness={0.35}
           metalness={0}
-          clearcoat={0.65} // ✅ plastik vernik hissi
+          clearcoat={0.7}
           clearcoatRoughness={0.25}
-          specularIntensity={0.6}
+          specularIntensity={0.7}
         />
       </mesh>
 
-      {/* Logo yüzeyi (orijinal renkler) */}
-      <mesh position={[0, 0, 0.055]} castShadow receiveShadow>
+      {/* Rim */}
+      <mesh position={[0, -0.57, 0]} receiveShadow>
+        <torusGeometry args={[standRadius * 0.82, 0.03, 16, 64]} />
+        <meshStandardMaterial roughness={0.5} metalness={0} color="#e9e9e9" />
+      </mesh>
+
+      {/* Logo */}
+      <mesh position={[0, -0.12, 0.10]} castShadow receiveShadow>
         <planeGeometry args={[w, h]} />
         <meshPhysicalMaterial
           map={texture}
           transparent
-          alphaTest={0.02} // ✅ kenar halelerini azaltır
-          roughness={0.25}
+          alphaTest={0.02}
+          roughness={0.24}
           metalness={0}
           clearcoat={0.35}
           clearcoatRoughness={0.22}
-          toneMapped={false} // ✅ logo renkleri solmasın
+          toneMapped={false}
         />
       </mesh>
     </group>
@@ -152,47 +184,70 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [aspect, setAspect] = useState<number>(2);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let revoke: string | null = null;
+    let timer: number | undefined;
 
     async function run() {
       if (!file) {
         setProcessedUrl(null);
+        setProgress(0);
         return;
       }
 
-      // PDF için ayrı pipeline gerekir (istersen ekleriz)
       if (file.type === "application/pdf") {
         setProcessedUrl(null);
+        setProgress(0);
         return;
       }
 
       setBusy(true);
+      setProgress(0);
+
+      // UX progress (yumuşak akar)
+      let p = 0;
+      timer = window.setInterval(() => {
+        p = Math.min(92, p + Math.random() * 7);
+        setProgress(Math.floor(p));
+      }, 250);
+
       try {
-        const inputUrl = URL.createObjectURL(file);
+        // ✅ önce küçült (performans)
+        const resized = await downscaleImage(file, 1024);
+
+        const inputUrl = URL.createObjectURL(resized);
 
         // ✅ arka plan kaldır
         const removedBlob = await removeBackground(inputUrl);
         URL.revokeObjectURL(inputUrl);
 
-        // ✅ otomatik kırp (tight crop)
+        // ✅ kırp
         const cropped = await cropTransparentPNG(removedBlob, 8, 12);
 
         revoke = URL.createObjectURL(cropped.blob);
         setAspect(cropped.width / cropped.height);
         setProcessedUrl(revoke);
+
+        // tamamla
+        setProgress(100);
       } catch (e) {
         console.error(e);
         setProcessedUrl(null);
       } finally {
+        if (timer) window.clearInterval(timer);
         setBusy(false);
+
+        // progress bar kaybolsun
+        setTimeout(() => setProgress(0), 400);
       }
     }
 
     run();
 
     return () => {
+      if (timer) window.clearInterval(timer);
       if (revoke) URL.revokeObjectURL(revoke);
     };
   }, [file]);
@@ -208,8 +263,21 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
   return (
     <div className="relative h-[260px] w-full rounded-2xl bg-neutral-50 overflow-hidden">
       {busy && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm text-neutral-700">
-          Logo hazırlanıyor…
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white/70 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-900" />
+            <div className="text-sm font-medium text-neutral-700">Logo hazırlanıyor…</div>
+          </div>
+
+          <div className="w-[70%]">
+            <div className="h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-neutral-900 transition-[width] duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-2 text-xs text-neutral-600 text-center">%{progress} tamamlandı</div>
+          </div>
         </div>
       )}
 
@@ -225,13 +293,13 @@ export default function Logo3DPreview({ file }: { file?: File | null }) {
         >
           <ambientLight intensity={0.9} />
           <directionalLight position={[3, 3, 3]} intensity={1.2} />
-          <RotatingLogo textureUrl={processedUrl} aspect={aspect} />
+          <LogoOnStand textureUrl={processedUrl} aspect={aspect} />
           <Environment preset="city" />
           <OrbitControls enableZoom={false} enablePan={false} />
         </Canvas>
       ) : (
         <div className="h-full w-full flex items-center justify-center text-neutral-500">
-          Önizleme oluşturulamadı
+          {file.type === "application/pdf" ? "PDF önizleme şimdilik kapalı" : "Önizleme hazırlanıyor"}
         </div>
       )}
     </div>
