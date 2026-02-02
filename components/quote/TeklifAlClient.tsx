@@ -1,7 +1,7 @@
 "use client";
 import HowItWorksVideo from "./HowItWorksVideo";
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import UploadCard from "./UploadCard";
 import { UploadErrors } from "./errors";
@@ -13,9 +13,9 @@ import { buildWhatsAppUrl, WHATSAPP_DEFAULT_MESSAGE } from "@/lib/quote/whatsapp
 const StlScene = dynamic(() => import("./stl/StlScene"), { ssr: false });
 
 const COLORS = [
-  "#000000","#ffffff","#ff3b3b","#ffaa00","#1e90ff","#8a2be2",
-  "#00c2a8","#ff5aa5","#7c3aed","#22c55e","#ef4444","#f97316",
-  "#0ea5e9","#a3a3a3","#f5d0fe","#fde047","#fb7185","#14b8a6",
+  "#000000", "#ffffff", "#ff3b3b", "#ffaa00", "#1e90ff", "#8a2be2",
+  "#00c2a8", "#ff5aa5", "#7c3aed", "#22c55e", "#ef4444", "#f97316",
+  "#0ea5e9", "#a3a3a3", "#f5d0fe", "#fde047", "#fb7185", "#14b8a6",
 ];
 
 type Props = {
@@ -24,7 +24,6 @@ type Props = {
 };
 
 export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: Props) {
-
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -35,6 +34,20 @@ export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: 
   const [colorHex, setColorHex] = useState("#000000");
   const [infillPct, setInfillPct] = useState(20);
   const [qty, setQty] = useState(1);
+
+  // ✅ iOS picker sırasında ağır şeyleri unmount etmek için
+  const [isPickingFile, setIsPickingFile] = useState(false);
+
+  // ✅ picker'dan geri dönünce (cancel bile etse) yakalamak için
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        setIsPickingFile(false);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   const pricing = useMemo(() => {
     return calcPricing({ metrics, material, colorHex, infillPct, qty });
@@ -50,7 +63,6 @@ export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: 
   }
 
   return (
-    // ✅ Sayfayı layout’tan bağımsız beyaza sabitle + taşmayı kapat + yazıları siyah yap
     <div className="min-h-screen bg-white text-neutral-900 overflow-x-hidden">
       <div className="mx-auto max-w-[1400px] px-4 py-10">
         <div className="w-full rounded-[32px] bg-white p-6 shadow-sm ring-1 ring-black/5 md:p-8">
@@ -68,6 +80,8 @@ export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: 
             {/* LEFT */}
             <div className="space-y-6 min-w-0">
               <UploadCard
+                onPickStart={() => setIsPickingFile(true)}
+                onPickEnd={() => setIsPickingFile(false)}
                 onFileAccepted={(file) => {
                   setErrorCode(null);
                   clearFile();
@@ -171,10 +185,14 @@ export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: 
                   </p>
                 </div>
               )}
-              <HowItWorksVideo
-  title={howItWorksTitle}
-  videoUrl={howItWorksVideoUrl ?? null}
-/>
+
+              {/* ✅ iOS picker sırasında videoyu unmount et */}
+              {!isPickingFile && (
+                <HowItWorksVideo
+                  title={howItWorksTitle}
+                  videoUrl={howItWorksVideoUrl ?? null}
+                />
+              )}
             </div>
 
             {/* RIGHT */}
@@ -185,23 +203,30 @@ export default function TeklifAlClient({ howItWorksTitle, howItWorksVideoUrl }: 
                   <p className="text-sm text-neutral-600">Model yüklendiğinde burada önizlemesini görebilirsiniz.</p>
                 </div>
 
-                <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-neutral-100 to-neutral-200">
-                  {fileUrl ? (
-                    <StlScene
-                      fileUrl={fileUrl}
-                      colorHex={colorHex}
-                      onMetrics={(m) => {
-                        setErrorCode(null);
-                        setMetrics(m);
-                      }}
-                      onError={(code) => setErrorCode(code)}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center px-6 text-center text-sm text-neutral-600">
-                      STL yükleyince model burada görünecek.
-                    </div>
-                  )}
-                </div>
+                {/* ✅ iOS picker sırasında Canvas'ı unmount et */}
+                {!isPickingFile ? (
+                  <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-neutral-100 to-neutral-200">
+                    {fileUrl ? (
+                      <StlScene
+                        fileUrl={fileUrl}
+                        colorHex={colorHex}
+                        onMetrics={(m) => {
+                          setErrorCode(null);
+                          setMetrics(m);
+                        }}
+                        onError={(code) => setErrorCode(code)}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-neutral-600">
+                        STL yükleyince model burada görünecek.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-neutral-100 flex items-center justify-center text-sm text-neutral-600">
+                    Dosya seçiliyor…
+                  </div>
+                )}
               </div>
 
               <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
