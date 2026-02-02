@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { QuoteForm } from "@/components/custom-products/QuoteForm";
 import { ProductTypeGrid } from "@/components/custom-products/ProductTypeGrid";
 import type { CustomProductType } from "@/lib/custom-products/types";
+import Logo3DPreview from "@/components/custom-products/Logo3DPreview";
 
 export default function CustomProductsClient({ types }: { types: CustomProductType[] }) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -12,16 +13,6 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
 
   // objectURL temizliği (memory leak olmasın)
-  const logoUrl = useMemo(() => {
-    if (!logoFile) return null;
-    return URL.createObjectURL(logoFile);
-  }, [logoFile]);
-
-  useEffect(() => {
-    return () => {
-      if (logoUrl) URL.revokeObjectURL(logoUrl);
-    };
-  }, [logoUrl]);
 
   const selectedTypes = useMemo(() => {
     const set = new Set(selectedTypeIds);
@@ -69,20 +60,9 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="text-lg font-semibold text-black">Önizleme</div>
 
-          <div className="mt-4 rounded-2xl bg-neutral-100 p-6">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt="Logo önizleme"
-                className="mx-auto max-h-52 object-contain"
-              />
-            ) : (
-              <div className="flex h-52 items-center justify-center text-sm text-neutral-600">
-                Logo yüklendiğinde burada gözükecek
-              </div>
-            )}
-          </div>
+          <div className="mt-4">
+  <Logo3DPreview file={logoFile} />
+</div>
         </div>
       </div>
 
