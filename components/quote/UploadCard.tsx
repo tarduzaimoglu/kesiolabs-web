@@ -9,9 +9,20 @@ type Props = {
   fileName: string | null;
   errorCode: string | null;
   setErrorCode: (c: string | null) => void;
+
+  // ✅ picker lifecycle (iOS için kritik)
+  onPickStart?: () => void;
+  onPickEnd?: () => void;
 };
 
-export default function UploadCard({ onFileAccepted, onClear, fileName, setErrorCode }: Props) {
+export default function UploadCard({
+  onFileAccepted,
+  onClear,
+  fileName,
+  setErrorCode,
+  onPickStart,
+  onPickEnd,
+}: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -22,15 +33,18 @@ export default function UploadCard({ onFileAccepted, onClear, fileName, setError
     return null;
   }, []);
 
-  const handleFile = useCallback((file: File) => {
-    const err = validate(file);
-    if (err) {
-      setErrorCode(err);
-      return;
-    }
-    setErrorCode(null);
-    onFileAccepted(file);
-  }, [onFileAccepted, setErrorCode, validate]);
+  const handleFile = useCallback(
+    (file: File) => {
+      const err = validate(file);
+      if (err) {
+        setErrorCode(err);
+        return;
+      }
+      setErrorCode(null);
+      onFileAccepted(file);
+    },
+    [onFileAccepted, setErrorCode, validate]
+  );
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
@@ -57,9 +71,12 @@ export default function UploadCard({ onFileAccepted, onClear, fileName, setError
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-sm font-medium text-neutral-900">STL dosyanızı buraya sürükleyin</p>
           <p className="text-xs text-neutral-600">veya</p>
+
           <button
             type="button"
             className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
+            // ✅ iOS'ta dosya seçici açılmadan önce çalışır
+            onPointerDown={() => onPickStart?.()}
             onClick={() => inputRef.current?.click()}
           >
             Dosya Seç
@@ -72,6 +89,7 @@ export default function UploadCard({ onFileAccepted, onClear, fileName, setError
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
+              onPickEnd?.();
               if (f) handleFile(f);
             }}
           />
