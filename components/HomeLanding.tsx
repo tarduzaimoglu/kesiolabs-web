@@ -123,7 +123,7 @@ function GlassCard({
   href: string;
 }) {
   return (
-    <Link href={href} className="group flex w-full justify-center">
+    <Link href={href} className="group block w-full">
       <div
         className="
           relative
@@ -248,13 +248,14 @@ export default async function HomeLanding() {
       {/* Content */}
       <div className="relative mx-auto flex max-w-7xl items-center justify-center px-4 sm:px-6 py-16">
         <div
-          className="
-            grid w-full justify-items-center
-            gap-8
-            grid-cols-1
-            md:grid-cols-2 md:gap-10
-            lg:grid-cols-3 lg:gap-14
-          "
+  className="
+    grid w-full place-items-center
+    gap-8
+    grid-cols-1
+    md:grid-cols-2 md:gap-10
+    lg:grid-cols-3 lg:gap-14
+  "
+>
         >
           {visibleCards.map((c, idx) => (
             <GlassCard
