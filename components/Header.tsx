@@ -232,9 +232,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
-        <div className="flex h-20 items-center">
+        <div className="flex h-20 items-center justify-between md:justify-start">
           {/* [ SOL BLOK ] (logo) */}
-          <div className={`flex-shrink-0 ${SIDE_COL}`}>
+          <div className="flex-shrink-0 w-auto md:w-[180px]">
             <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
               <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
             </Link>
@@ -310,7 +310,7 @@ export default function Header() {
           </div>
 
           {/* [ SAĞ BLOK ] (boş + mobile burger) */}
-          <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
+          <div className="flex-shrink-0 w-auto md:w-[180px] flex items-center justify-end">
             <button
               type="button"
               aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
