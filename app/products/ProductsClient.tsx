@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CategoryTabs } from "@/components/products/CategoryTabs";
 import { ProductGrid } from "@/components/products/ProductGrid";
@@ -11,23 +11,28 @@ import { CART_MIN_QTY } from "@/components/cart/CartContext";
 type Product = any;
 type Category = { key: string; label: string };
 
-type Pagination = {
-  page: number;
-  pageSize: number;
-  pageCount: number;
-  total: number;
-};
+const PAGE_SIZE = 20;
+
+function smartSort(items: Product[]) {
+  return [...items].sort((a, b) => {
+    const af = a.featured ? 1 : 0;
+    const bf = b.featured ? 1 : 0;
+    if (bf !== af) return bf - af;
+    return (
+      new Date(b.createdAtISO || 0).getTime() -
+      new Date(a.createdAtISO || 0).getTime()
+    );
+  });
+}
 
 export default function ProductsClient({
   defaultCat = "featured",
   products,
   categories,
-  pagination,
 }: {
   defaultCat?: string;
   products: Product[];
   categories: Category[];
-  pagination: Pagination;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,47 +43,69 @@ export default function ProductsClient({
   // 🔑 TEK KAYNAK: productId → qtyText
   const [qtyById, setQtyById] = useState<Record<string, string>>({});
 
-  // server pagination’dan
-  const page = pagination?.page ?? 1;
-  const pageCount = pagination?.pageCount ?? 1;
+  // URL'den page oku (yoksa 1)
+  const pageFromUrl = useMemo(() => {
+    const raw = sp?.get("page") ?? "1";
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
+  }, [sp]);
 
-  // URL -> state eşitle (geri/ileri vb.)
+  const [page, setPage] = useState<number>(pageFromUrl);
+
+  // URL değişirse state'i eşitle
   useEffect(() => {
-    const catFromUrl = (sp?.get("cat") ?? defaultCat).toString();
-    setActive(catFromUrl);
-  }, [sp, defaultCat]);
+    setPage(pageFromUrl);
+  }, [pageFromUrl]);
+
+  // Filtrelenmiş liste
+  const filteredAll = useMemo(() => {
+    if (active === "featured") return smartSort(products);
+    return products.filter((p) => p.category === active);
+  }, [active, products]);
+
+  // sayfa sayısı
+  const pageCount = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredAll.length / PAGE_SIZE));
+  }, [filteredAll.length]);
+
+  // Eğer URL'den gelen page fazla ise kırp
+  useEffect(() => {
+    if (page > pageCount) {
+      changePage(pageCount);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageCount]);
+
+  // Bu sayfada gösterilecek ürünler
+  const paged = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredAll.slice(start, start + PAGE_SIZE);
+  }, [filteredAll, page]);
 
   const getQtyText = (id: any) => qtyById[String(id)] ?? String(CART_MIN_QTY);
 
   const setQtyText = (id: any, v: string) =>
     setQtyById((prev) => ({ ...prev, [String(id)]: v }));
 
-  function pushParams(next: URLSearchParams) {
-    const qs = next.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: true });
-  }
-
   function changePage(nextPage: number) {
     const safe = Math.min(Math.max(1, nextPage), pageCount);
     const next = new URLSearchParams(sp?.toString() ?? "");
+
     if (safe <= 1) next.delete("page");
     else next.set("page", String(safe));
-    pushParams(next);
+
+    router.push(`${pathname}?${next.toString()}`, { scroll: true });
+    setPage(safe);
   }
 
   function changeCategory(nextCat: string) {
     setActive(nextCat);
+    // kategori değişince 1. sayfaya dön ve URL'yi temizle
     const next = new URLSearchParams(sp?.toString() ?? "");
-    // kategori paramı
-    if (!nextCat || nextCat === "featured") next.delete("cat");
-    else next.set("cat", nextCat);
-    // kategori değişince sayfayı sıfırla
     next.delete("page");
-    pushParams(next);
+    router.push(`${pathname}?${next.toString()}`, { scroll: true });
+    setPage(1);
   }
-
-  // Bu sayfada zaten server’dan ürünler gelmiş durumda
-  const shown = useMemo(() => products, [products]);
 
   return (
     <>
@@ -94,7 +121,7 @@ export default function ProductsClient({
 
       <div className="mt-6">
         <ProductGrid
-          products={shown}
+          products={paged}
           qtyTextById={qtyById}
           getQtyText={getQtyText}
           onQtyTextChange={setQtyText}
@@ -102,7 +129,11 @@ export default function ProductsClient({
       </div>
 
       <div className="mt-10 flex justify-center">
-        <CatalogPagination page={page} pageCount={pageCount} onChange={changePage} />
+        <CatalogPagination
+          page={page}
+          pageCount={pageCount}
+          onChange={changePage}
+        />
       </div>
 
       <CartFab />
