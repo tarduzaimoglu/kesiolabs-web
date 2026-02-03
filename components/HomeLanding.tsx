@@ -123,7 +123,7 @@ function GlassCard({
   href: string;
 }) {
   return (
-    <Link href={href} className="group block w-full">
+    <Link href={href} className="group flex w-full justify-center">
       <div
         className="
           relative
