@@ -219,7 +219,7 @@ export default function Header() {
               {/* Scroll container */}
               <div
                 ref={scrollerRef}
-                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth px-10"
+                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth pl-14 pr-14"
                 onWheel={onWheelHorizontal}
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
