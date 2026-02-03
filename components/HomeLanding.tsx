@@ -123,13 +123,11 @@ function GlassCard({
   href: string;
 }) {
   return (
-    <Link href={href} className="group block w-full">
+    <Link href={href} className="group block w-full justify-self-center">
       <div
         className="
           relative
-          w-full
-          mx-auto
-          max-w-[clamp(300px,32vw,420px)]
+          w-[clamp(300px,32vw,420px)]
           h-[clamp(340px,38vw,520px)]
           px-[clamp(22px,3.2vw,48px)]
           flex flex-col items-center justify-center gap-7
@@ -250,7 +248,7 @@ export default async function HomeLanding() {
       <div className="relative mx-auto flex max-w-7xl items-center justify-center px-4 sm:px-6 py-16">
         <div
   className="
-    grid w-full place-items-center
+    grid w-full place-items-center items-start
     gap-8
     grid-cols-1
     md:grid-cols-2 md:gap-10
