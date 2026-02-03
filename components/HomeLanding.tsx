@@ -104,7 +104,8 @@ async function fetchHomeLanding(): Promise<HomeLandingData | null> {
 }
 
 function iconNode(icon?: GlassCardItem["icon"]) {
-  const common = { size: 70, strokeWidth: 1.5 } as const;
+  // ikon boyutu da “devleşmesin” diye biraz dengeli tuttum
+  const common = { size: 64, strokeWidth: 1.5 } as const;
   if (icon === "book") return <BookOpen {...common} />;
   if (icon === "bag") return <ShoppingBag {...common} />;
   return <Box {...common} />;
@@ -122,16 +123,15 @@ function GlassCard({
   href: string;
 }) {
   return (
-    <Link href={href} className="group">
+    <Link href={href} className="group block w-full">
       <div
         className="
           relative
-         w-full max-w-[340px] h-[360px]
-sm:max-w-[300px] sm:h-[420px]
-md:max-w-[360px] md:h-[480px]
-lg:max-w-[420px] lg:h-[520px]
-          px-12
-          flex flex-col items-center justify-center gap-8
+          w-full
+          max-w-[clamp(300px,32vw,420px)]
+          h-[clamp(340px,38vw,520px)]
+          px-[clamp(22px,3.2vw,48px)]
+          flex flex-col items-center justify-center gap-7
           text-center
           overflow-hidden
 
@@ -186,14 +186,14 @@ lg:max-w-[420px] lg:h-[520px]
           "
         />
 
-        <div className="relative z-10 flex flex-col items-center gap-6">
+        <div className="relative z-10 flex flex-col items-center gap-5">
           <div className="text-white/85">{icon}</div>
 
-          <h3 className="text-[26px] sm:text-[32px] md:text-[40px] lg:text-5xl font-semibold text-white leading-[1.15] whitespace-pre-line">
+          <h3 className="text-[clamp(26px,3.2vw,48px)] font-semibold text-white leading-[1.15] whitespace-pre-line">
             {title}
           </h3>
 
-          <p className="text-[13px] sm:text-[14px] md:text-[16px] lg:text-lg text-white/75 leading-[1.6] whitespace-pre-line">
+          <p className="text-[clamp(13px,1.5vw,18px)] text-white/75 leading-[1.6] whitespace-pre-line">
             {subtitle}
           </p>
         </div>
@@ -249,9 +249,11 @@ export default async function HomeLanding() {
       <div className="relative mx-auto flex max-w-7xl items-center justify-center px-4 sm:px-6 py-16">
         <div
           className="
-            grid w-full place-items-center gap-10
+            grid w-full justify-items-center
+            gap-8
             grid-cols-1
-            md:grid-cols-3 md:gap-14
+            md:grid-cols-2 md:gap-10
+            lg:grid-cols-3 lg:gap-14
           "
         >
           {visibleCards.map((c, idx) => (
