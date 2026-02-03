@@ -128,6 +128,7 @@ function GlassCard({
         className="
           relative
           w-full
+          mx-auto
           max-w-[clamp(300px,32vw,420px)]
           h-[clamp(340px,38vw,520px)]
           px-[clamp(22px,3.2vw,48px)]
@@ -255,7 +256,6 @@ export default async function HomeLanding() {
     md:grid-cols-2 md:gap-10
     lg:grid-cols-3 lg:gap-14
   "
->
         >
           {visibleCards.map((c, idx) => (
             <GlassCard
