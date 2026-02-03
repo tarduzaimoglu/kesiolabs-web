@@ -7,12 +7,13 @@ const PAGE_SIZE = 20;
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string; cat?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page ?? "1") || 1);
+  const cat = (searchParams?.cat ?? "featured").toString();
 
-  const [products, cats] = await Promise.all([
-    getCatalogProducts(page, PAGE_SIZE),
+  const [{ items: products, pagination }, cats] = await Promise.all([
+    getCatalogProducts(page, PAGE_SIZE, cat),
     getCatalogCategories(),
   ]);
 
@@ -32,7 +33,8 @@ export default async function ProductsPage({
           <ProductsClient
             products={products}
             categories={categories}
-            defaultCat="featured"
+            defaultCat={cat}
+            pagination={pagination}
           />
         </div>
       </div>
