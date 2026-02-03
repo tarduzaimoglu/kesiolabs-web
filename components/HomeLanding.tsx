@@ -127,7 +127,7 @@ function GlassCard({
       <div
         className="
           relative
-          w-[min(92vw,420px)] md:w-[clamp(300px,32vw,420px)]
+          w-[min(92vw,420px)]
           h-[clamp(340px,38vw,520px)]
           px-[clamp(22px,3.2vw,48px)]
           flex flex-col items-center justify-center gap-7
@@ -252,15 +252,13 @@ export default async function HomeLanding() {
     paddingRight: "max(16px, env(safe-area-inset-right))",
   }}
 >
-        <div
+<div
   className="
-    grid w-full place-items-center items-start
-    gap-8
-    grid-cols-1
-    md:grid-cols-2 md:gap-10
-    lg:grid-cols-3 lg:gap-14
+    grid w-full items-start justify-center
+    gap-8 md:gap-10 lg:gap-14
+    [grid-template-columns:repeat(auto-fit,minmax(min(92vw,420px),1fr))]
   "
-        >
+>
           {visibleCards.map((c, idx) => (
             <GlassCard
               key={c.id ?? idx}
