@@ -19,15 +19,12 @@ const SIDE_COL = "w-[180px]";
 // Premium easing
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
-// Brand-ish colors (çok düşük opaklıkla kullanacağız)
-const BRAND_BLUE_RGB = "11, 74, 162"; // #0B4AA2
+// Brand colors
+const BRAND_BLUE_RGB = "11, 74, 162"; // #0B4AA2 (çok dikkatli, düşük opaklık)
 const BRAND_ORANGE = "#ff7a00";
 
 // Kaydırma adımı (1-2 menü öğesi kadar)
 const SCROLL_STEP = 260;
-
-// Çok hafif mavi gradient (header’ı maviye BOĞMAZ)
-const EDGE_FADE = `rgba(${BRAND_BLUE_RGB}, 0.14)`;
 
 function ChevronLeft({ className = "" }: { className?: string }) {
   return (
@@ -153,16 +150,10 @@ export default function Header() {
     const el = scrollerRef.current;
     if (!el) return;
 
-    // Trackpad yatay scroll (deltaX) varsa onu da dahil et
-    const dx = Math.abs(e.deltaX);
-    const dy = Math.abs(e.deltaY);
-
-    // Kullanıcı menü üstündeyse, sayfayı kaydırmak yerine menüyü kaydır.
-    // (Overflow yoksa hiç karışma)
     if (!hasOverflow) return;
 
-    // Özellikle mouse tekerleğinde deltaY baskındır; onu yataya çeviriyoruz.
-    // Trackpad’de deltaX varsa zaten yatay kaydırma niyeti olabilir.
+    const dx = Math.abs(e.deltaX);
+    const dy = Math.abs(e.deltaY);
     const move = dx > dy ? e.deltaX : e.deltaY;
 
     e.preventDefault();
@@ -200,9 +191,7 @@ export default function Header() {
     const ro = new ResizeObserver(() => updateOverflowState());
     ro.observe(el);
 
-    // font yüklenmesi / layout shift ihtimaline karşı
     const t = window.setTimeout(updateOverflowState, 60);
-
     window.addEventListener("resize", updateOverflowState);
 
     return () => {
@@ -211,7 +200,6 @@ export default function Header() {
       el.removeEventListener("scroll", onScroll);
       ro.disconnect();
     };
-    // hasOverflow'u burada dependency yapmıyoruz; updateOverflowState zaten güncelliyor
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePath]);
 
@@ -228,17 +216,14 @@ export default function Header() {
 
           {/* Orta */}
           <nav className="hidden md:flex flex-1 min-w-0 justify-center">
-            {/* Wrapper: oklar + gradient overlay burada */}
+            {/* Wrapper: oklar burada */}
             <div className="relative flex-1 min-w-0 max-w-[920px]">
               {/* Scroll container */}
               <div
                 ref={scrollerRef}
-                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth"
-                // touch swipe zaten çalışır; biz sadece desktop wheel'i yakalıyoruz
+                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth px-10"
                 onWheel={onWheelHorizontal}
-                // Prevent default sadece JS'te; React onWheel'de preventDefault çalışsın diye passive olmamalı
                 style={{
-                  // iOS’ta doğal momentum hissi
                   WebkitOverflowScrolling: "touch",
                 }}
               >
@@ -265,68 +250,60 @@ export default function Header() {
                 ))}
               </div>
 
-              {/* Sol gradient + ok */}
-              <div
-                className={[
-                  "pointer-events-none absolute left-0 top-0 h-full w-16",
-                  "transition-opacity duration-200",
-                  hasOverflow && canLeft ? "opacity-100" : "opacity-0",
-                ].join(" ")}
-                style={{
-                  background: `linear-gradient(to right, ${EDGE_FADE}, rgba(${BRAND_BLUE_RGB}, 0))`,
-                }}
-              />
+              {/* SOL: mavi gradientli kapsül buton */}
               <button
                 type="button"
                 aria-label="Menüyü sola kaydır"
                 onClick={() => scrollByDir("left")}
                 className={[
                   "absolute left-1 top-1/2 -translate-y-1/2",
-                  "h-9 w-9 rounded-xl",
+                  "h-10 w-14 rounded-full",
                   "flex items-center justify-center",
                   "transition-all duration-200",
                   EASE,
-                  "bg-[#FAFAF7]/70 backdrop-blur",
                   "border border-slate-200 shadow-sm",
-                  "hover:shadow-md hover:-translate-y-[52%]",
-                  "active:scale-[0.98]",
+                  "hover:shadow-md active:scale-[0.98]",
                   hasOverflow && canLeft ? "opacity-100" : "opacity-0 pointer-events-none",
                 ].join(" ")}
-                style={{ color: BRAND_ORANGE }}
+                style={{
+                  background: `linear-gradient(to right,
+                    rgba(${BRAND_BLUE_RGB}, 0.55),
+                    rgba(${BRAND_BLUE_RGB}, 0.22),
+                    rgba(${BRAND_BLUE_RGB}, 0.00)
+                  )`,
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                }}
               >
-                <ChevronLeft />
+                <ChevronLeft className="text-[#ff7a00]" />
               </button>
 
-              {/* Sağ gradient + ok */}
-              <div
-                className={[
-                  "pointer-events-none absolute right-0 top-0 h-full w-16",
-                  "transition-opacity duration-200",
-                  hasOverflow && canRight ? "opacity-100" : "opacity-0",
-                ].join(" ")}
-                style={{
-                  background: `linear-gradient(to left, ${EDGE_FADE}, rgba(${BRAND_BLUE_RGB}, 0))`,
-                }}
-              />
+              {/* SAĞ: mavi gradientli kapsül buton */}
               <button
                 type="button"
                 aria-label="Menüyü sağa kaydır"
                 onClick={() => scrollByDir("right")}
                 className={[
                   "absolute right-1 top-1/2 -translate-y-1/2",
-                  "h-9 w-9 rounded-xl",
+                  "h-10 w-14 rounded-full",
                   "flex items-center justify-center",
                   "transition-all duration-200",
                   EASE,
-                  "bg-[#FAFAF7]/70 backdrop-blur",
                   "border border-slate-200 shadow-sm",
-                  "hover:shadow-md hover:-translate-y-[52%]",
-                  "active:scale-[0.98]",
+                  "hover:shadow-md active:scale-[0.98]",
                   hasOverflow && canRight ? "opacity-100" : "opacity-0 pointer-events-none",
                 ].join(" ")}
-                style={{ color: BRAND_ORANGE }}
+                style={{
+                  background: `linear-gradient(to left,
+                    rgba(${BRAND_BLUE_RGB}, 0.55),
+                    rgba(${BRAND_BLUE_RGB}, 0.22),
+                    rgba(${BRAND_BLUE_RGB}, 0.00)
+                  )`,
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                }}
               >
-                <ChevronRight />
+                <ChevronRight className="text-[#ff7a00]" />
               </button>
             </div>
           </nav>
@@ -375,7 +352,9 @@ export default function Header() {
             "bg-[#FAFAF7] border-l border-slate-200 shadow-2xl sheet-edge",
             "transform-gpu transition-all duration-300",
             EASE,
-            open ? "translate-x-0 opacity-100 scale-100 animate-sheet-in" : "translate-x-full opacity-0 scale-[0.98]",
+            open
+              ? "translate-x-0 opacity-100 scale-100 animate-sheet-in"
+              : "translate-x-full opacity-0 scale-[0.98]",
           ].join(" ")}
           style={{
             paddingTop: "env(safe-area-inset-top)",
