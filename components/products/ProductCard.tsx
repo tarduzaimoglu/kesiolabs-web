@@ -1,13 +1,22 @@
 "use client";
 
 import React, { useMemo } from "react";
+import Image from "next/image";
 import type { Product } from "@/lib/products/types";
 import { CART_MIN_QTY, FALLBACK_UNIT_PRICE } from "@/components/cart/CartContext";
 
-function resolveImageSrc(product: any) {
-  if (typeof product?.imageUrl === "string" && product.imageUrl.trim()) return product.imageUrl;
-  if (typeof product?.image === "string" && product.image.trim()) return product.image;
-  return "/products/placeholder.png";
+function resolveThumbSrc(product: any) {
+  const raw =
+    (typeof product?.imageUrl === "string" && product.imageUrl.trim() && product.imageUrl) ||
+    (typeof product?.image === "string" && product.image.trim() && product.image);
+
+  if (!raw) return "/products/placeholder.png";
+
+  // ✅ Supabase thumbs dönüşümü:
+  // .../media/xxx.jpg  ->  .../media/thumbs/xxx.webp
+  return raw
+    .replace("/media/", "/media/thumbs/")
+    .replace(/\.(jpg|jpeg|png)$/i, ".webp");
 }
 
 type Props = {
@@ -21,7 +30,7 @@ type Props = {
 };
 
 export function ProductCard({ product, onOpen, isOpen }: Props) {
-  const imgSrc = resolveImageSrc(product as any);
+  const imgSrc = resolveThumbSrc(product as any);
 
   const unitPrice = useMemo(() => {
     const p = (product as any).wholesalePrice;
@@ -56,11 +65,12 @@ export function ProductCard({ product, onOpen, isOpen }: Props) {
     >
       {/* Görsel */}
       <div className="relative aspect-[1/1] w-full overflow-hidden bg-slate-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={imgSrc}
           alt={product.title}
-          loading="lazy"
+          width={800}
+          height={800}
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
           className="h-full w-full object-contain bg-slate-100"
         />
 

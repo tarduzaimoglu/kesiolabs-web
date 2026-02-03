@@ -18,6 +18,13 @@ const nextConfig = {
         port: "1337",
         pathname: "/uploads/**",
       },
+
+      // ✅ Supabase Storage (public)
+      {
+        protocol: "https",
+        hostname: "qwxzrxmmhmvkjdqudtxb.storage.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
 };
