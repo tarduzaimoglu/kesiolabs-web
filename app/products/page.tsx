@@ -5,18 +5,9 @@ import ProductsClient from "./ProductsClient";
 import { CartIndicator } from "@/components/cart/CartIndicator";
 import { getCatalogProducts, getCatalogCategories } from "@/lib/strapi";
 
-const PAGE_SIZE = 20;
-
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string; cat?: string };
-}) {
-  const page = Math.max(1, Number(searchParams?.page ?? "1") || 1);
-  const cat = (searchParams?.cat ?? "featured").toString();
-
-  const [{ items: products, pagination }, cats] = await Promise.all([
-    getCatalogProducts(page, PAGE_SIZE, cat),
+export default async function ProductsPage() {
+  const [products, cats] = await Promise.all([
+    getCatalogProducts(),
     getCatalogCategories(),
   ]);
 
@@ -36,8 +27,7 @@ export default async function ProductsPage({
           <ProductsClient
             products={products}
             categories={categories}
-            defaultCat={cat}
-            pagination={pagination}
+            defaultCat="featured"
           />
         </div>
       </div>
