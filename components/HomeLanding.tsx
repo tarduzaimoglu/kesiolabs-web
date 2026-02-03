@@ -127,7 +127,7 @@ function GlassCard({
       <div
         className="
           relative
-          w-[clamp(300px,32vw,420px)]
+          w-[min(92vw,420px)] md:w-[clamp(300px,32vw,420px)]
           h-[clamp(340px,38vw,520px)]
           px-[clamp(22px,3.2vw,48px)]
           flex flex-col items-center justify-center gap-7
@@ -245,7 +245,13 @@ export default async function HomeLanding() {
       </div>
 
       {/* Content */}
-      <div className="relative mx-auto flex max-w-7xl items-center justify-center px-4 sm:px-6 py-16">
+      <div
+  className="relative mx-auto flex max-w-7xl items-center justify-center py-16"
+  style={{
+    paddingLeft: "max(16px, env(safe-area-inset-left))",
+    paddingRight: "max(16px, env(safe-area-inset-right))",
+  }}
+>
         <div
   className="
     grid w-full place-items-center items-start
