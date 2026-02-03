@@ -6,7 +6,7 @@ import { useCart } from "@/components/cart/CartContext";
 
 /** ✅ Named export: <CartIndicator /> şeklinde de kullanılabilsin */
 export function CartIndicator() {
-  const { itemCount } = useCart();
+  const { itemCount, hydrated } = useCart();
 
   return (
     <Link
@@ -16,7 +16,8 @@ export function CartIndicator() {
     >
       <ShoppingBag className="h-5 w-5 text-slate-800" />
 
-      {itemCount > 0 ? (
+      {/* ✅ Hydrated olmadan badge gösterme (flicker önleme) */}
+      {hydrated && itemCount > 0 ? (
         <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-semibold text-white">
           {itemCount}
         </span>
@@ -30,8 +31,10 @@ export default CartIndicator;
 
 /** ✅ Mobil baloncuk */
 export function CartFab() {
-  const { itemCount } = useCart();
+  const { itemCount, hydrated } = useCart();
 
+  // ✅ Hydrated olmadan karar verme (ilk anda yanlışlıkla gizlenmesin/gösterilmesin)
+  if (!hydrated) return null;
   if (itemCount <= 0) return null;
 
   return (
