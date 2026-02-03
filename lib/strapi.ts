@@ -138,7 +138,8 @@ export async function strapiFetch<T>(path: string, init?: RequestInit): Promise<
   const res = await fetch(url, {
     ...init,
     headers,
-    ...(hasCache || hasNext ? {} : { cache: "no-store" }),
+   cache: init?.cache ?? "no-store",
+  next: (init as any)?.next ?? { revalidate: 0 },
   });
 
   if (!res.ok) {

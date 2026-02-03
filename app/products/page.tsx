@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import ProductsClient from "./ProductsClient";
 import { CartIndicator } from "@/components/cart/CartIndicator";
 import { getCatalogProducts, getCatalogCategories } from "@/lib/strapi";
