@@ -26,16 +26,12 @@ const BRAND_ORANGE = "#ff7a00";
 // Kaydırma adımı
 const SCROLL_STEP = 260;
 
+// Ok kolonlarının genişliği (taşma varsa görünür)
+const ARROW_COL = "w-[44px]"; // 44px = temiz, compact
+
 function ChevronLeft({ className = "" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M15 18l-6-6 6-6"
         stroke="currentColor"
@@ -49,14 +45,7 @@ function ChevronLeft({ className = "" }: { className?: string }) {
 
 function ChevronRight({ className = "" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M9 6l6 6-6 6"
         stroke="currentColor"
@@ -110,6 +99,40 @@ function AnimatedBurger({ open }: { open: boolean }) {
         ].join(" ")}
       />
     </span>
+  );
+}
+
+function ArrowButton({
+  dir,
+  onClick,
+}: {
+  dir: "left" | "right";
+  onClick: () => void;
+}) {
+  // Premium ghost + ince mavi ring + çok hafif hint
+  const commonClass = [
+    "h-9 w-9 rounded-full",
+    "flex items-center justify-center",
+    "transition-all duration-200",
+    EASE,
+    "border bg-transparent",
+    "shadow-[0_6px_18px_rgba(15,23,42,0.08)]",
+    "hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)]",
+    "active:scale-[0.98]",
+  ].join(" ");
+
+  const style: React.CSSProperties = {
+    borderColor: `rgba(${BRAND_BLUE_RGB}, 0.18)`,
+    background:
+      dir === "left"
+        ? `linear-gradient(to right, rgba(${BRAND_BLUE_RGB}, 0.08), rgba(${BRAND_BLUE_RGB}, 0.00))`
+        : `linear-gradient(to left, rgba(${BRAND_BLUE_RGB}, 0.08), rgba(${BRAND_BLUE_RGB}, 0.00))`,
+  };
+
+  return (
+    <button type="button" aria-label={dir === "left" ? "Menüyü sola kaydır" : "Menüyü sağa kaydır"} onClick={onClick} className={commonClass} style={style}>
+      {dir === "left" ? <ChevronLeft className="text-[#ff7a00]" /> : <ChevronRight className="text-[#ff7a00]" />}
+    </button>
   );
 }
 
@@ -177,7 +200,7 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Overflow state: resize + scroll + content changes
+  // Overflow state
   useEffect(() => {
     updateOverflowState();
 
@@ -202,111 +225,91 @@ export default function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePath]);
 
+  // Ok kolonları "yokmuş gibi": overflow yoksa width 0 + opacity 0 + pointer-events none
+  const leftArrowVisible = hasOverflow && canLeft;
+  const rightArrowVisible = hasOverflow && canRight;
+
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-slate-200">
       <div className="w-full px-6">
         <div className="flex h-20 items-center">
-          {/* Sol */}
+          {/* [ SOL BLOK ] (logo) */}
           <div className={`flex-shrink-0 ${SIDE_COL}`}>
             <Link href="/" className="inline-flex" onClick={() => setOpen(false)}>
               <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
             </Link>
           </div>
 
-          {/* Orta */}
-          <nav className="hidden md:flex flex-1 min-w-0 justify-center">
-            <div className="relative flex-1 min-w-0 max-w-[920px]">
-              {/* Scroll container */}
-              <div
-                ref={scrollerRef}
-                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth pl-14 pr-14"
-                onWheel={onWheelHorizontal}
-                style={{ WebkitOverflowScrolling: "touch" }}
-              >
-                {navItems.map((item, i) => (
-                  <div key={item.href} className="flex items-center gap-8">
-                    <Link
-                      href={item.href}
-                      className={`
-                        shrink-0 transition-colors duration-200
-                        ${
-                          activePath === item.href
-                            ? "text-[#ff7a00] font-semibold"
-                            : "text-slate-700 hover:text-[#ff7a00]"
-                        }
-                      `}
-                    >
-                      {item.label}
-                    </Link>
-
-                    {i !== navItems.length - 1 && (
-                      <span className="h-5 w-px bg-slate-200 shrink-0" />
-                    )}
-                  </div>
-                ))}
+          {/* [ SOL YÖN OKU ] (ayrı kolon) */}
+          <div
+            className={[
+              "hidden md:flex flex-shrink-0 items-center justify-center",
+              "transition-[width,opacity] duration-200",
+              EASE,
+              hasOverflow ? ARROW_COL : "w-0",
+              leftArrowVisible ? "opacity-100" : "opacity-0",
+              hasOverflow ? "" : "pointer-events-none",
+            ].join(" ")}
+          >
+            {/* overflow var ama en soldaysak: kolon dursun ama buton pasif kalsın */}
+            {hasOverflow && (
+              <div className={leftArrowVisible ? "" : "opacity-0 pointer-events-none"}>
+                <ArrowButton dir="left" onClick={() => scrollByDir("left")} />
               </div>
+            )}
+          </div>
 
-              {/* SOL OK: premium ghost + ince mavi ring + çok hafif hint */}
-              <button
-                type="button"
-                aria-label="Menüyü sola kaydır"
-                onClick={() => scrollByDir("left")}
-                className={[
-                  "absolute left-1 top-1/2 -translate-y-1/2",
-                  "h-9 w-9 rounded-full",
-                  "flex items-center justify-center",
-                  "transition-all duration-200",
-                  EASE,
-                  "border",
-                  "bg-transparent",
-                  "shadow-[0_6px_18px_rgba(15,23,42,0.08)]",
-                  "hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)]",
-                  "active:scale-[0.98]",
-                  hasOverflow && canLeft ? "opacity-100" : "opacity-0 pointer-events-none",
-                ].join(" ")}
-                style={{
-                  borderColor: `rgba(${BRAND_BLUE_RGB}, 0.18)`,
-                  background: `linear-gradient(to right,
-                    rgba(${BRAND_BLUE_RGB}, 0.08),
-                    rgba(${BRAND_BLUE_RGB}, 0.00)
-                  )`,
-                }}
-              >
-                <ChevronLeft className="text-[#ff7a00]" />
-              </button>
+          {/* [ ORTA NAV ] */}
+          <nav className="hidden md:flex flex-1 min-w-0 justify-center">
+            <div
+              ref={scrollerRef}
+              className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth"
+              onWheel={onWheelHorizontal}
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {navItems.map((item, i) => (
+                <div key={item.href} className="flex items-center gap-8">
+                  <Link
+                    href={item.href}
+                    className={`
+                      shrink-0 transition-colors duration-200
+                      ${
+                        activePath === item.href
+                          ? "text-[#ff7a00] font-semibold"
+                          : "text-slate-700 hover:text-[#ff7a00]"
+                      }
+                    `}
+                  >
+                    {item.label}
+                  </Link>
 
-              {/* SAĞ OK: premium ghost + ince mavi ring + çok hafif hint */}
-              <button
-                type="button"
-                aria-label="Menüyü sağa kaydır"
-                onClick={() => scrollByDir("right")}
-                className={[
-                  "absolute right-1 top-1/2 -translate-y-1/2",
-                  "h-9 w-9 rounded-full",
-                  "flex items-center justify-center",
-                  "transition-all duration-200",
-                  EASE,
-                  "border",
-                  "bg-transparent",
-                  "shadow-[0_6px_18px_rgba(15,23,42,0.08)]",
-                  "hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)]",
-                  "active:scale-[0.98]",
-                  hasOverflow && canRight ? "opacity-100" : "opacity-0 pointer-events-none",
-                ].join(" ")}
-                style={{
-                  borderColor: `rgba(${BRAND_BLUE_RGB}, 0.18)`,
-                  background: `linear-gradient(to left,
-                    rgba(${BRAND_BLUE_RGB}, 0.08),
-                    rgba(${BRAND_BLUE_RGB}, 0.00)
-                  )`,
-                }}
-              >
-                <ChevronRight className="text-[#ff7a00]" />
-              </button>
+                  {i !== navItems.length - 1 && (
+                    <span className="h-5 w-px bg-slate-200 shrink-0" />
+                  )}
+                </div>
+              ))}
             </div>
           </nav>
 
-          {/* Sağ */}
+          {/* [ SAĞ YÖN OKU ] (ayrı kolon) */}
+          <div
+            className={[
+              "hidden md:flex flex-shrink-0 items-center justify-center",
+              "transition-[width,opacity] duration-200",
+              EASE,
+              hasOverflow ? ARROW_COL : "w-0",
+              rightArrowVisible ? "opacity-100" : "opacity-0",
+              hasOverflow ? "" : "pointer-events-none",
+            ].join(" ")}
+          >
+            {hasOverflow && (
+              <div className={rightArrowVisible ? "" : "opacity-0 pointer-events-none"}>
+                <ArrowButton dir="right" onClick={() => scrollByDir("right")} />
+              </div>
+            )}
+          </div>
+
+          {/* [ SAĞ BLOK ] (boş + mobile burger) */}
           <div className={`flex-shrink-0 ${SIDE_COL} flex items-center justify-end`}>
             <button
               type="button"
@@ -323,7 +326,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* iOS Sheet */}
+      {/* Mobile Sheet */}
       <div
         className={[
           "md:hidden fixed inset-0 z-[60]",
