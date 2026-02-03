@@ -12,8 +12,13 @@ function resolveThumbSrc(product: any) {
 
   if (!raw) return "/products/placeholder.png";
 
-  // ✅ Supabase thumbs dönüşümü:
-  // .../media/xxx.jpg  ->  .../media/thumbs/xxx.webp
+  // ✅ Supabase değilse dokunma
+  if (!raw.includes("/storage/v1/object/public/media/")) return raw;
+
+  // ✅ Eğer zaten webp/avif ise: thumbs'a yönlendirme (thumb üretilmemiş olabilir)
+  if (/\.(webp|avif)$/i.test(raw)) return raw;
+
+  // ✅ jpg/jpeg/png ise: thumbs webp kullan
   return raw
     .replace("/media/", "/media/thumbs/")
     .replace(/\.(jpg|jpeg|png)$/i, ".webp");
