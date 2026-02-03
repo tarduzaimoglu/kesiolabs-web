@@ -104,7 +104,6 @@ async function fetchHomeLanding(): Promise<HomeLandingData | null> {
 }
 
 function iconNode(icon?: GlassCardItem["icon"]) {
-  // ikon boyutu da “devleşmesin” diye biraz dengeli tuttum
   const common = { size: 64, strokeWidth: 1.5 } as const;
   if (icon === "book") return <BookOpen {...common} />;
   if (icon === "bag") return <ShoppingBag {...common} />;
@@ -127,7 +126,7 @@ function GlassCard({
       <div
         className="
           relative
-          w-[min(92vw,420px)]
+          w-[min(92vw,420px)] md:w-full md:max-w-[420px] md:mx-auto
           h-[clamp(340px,38vw,520px)]
           px-[clamp(22px,3.2vw,48px)]
           flex flex-col items-center justify-center gap-7
@@ -246,19 +245,20 @@ export default async function HomeLanding() {
 
       {/* Content */}
       <div
-  className="relative mx-auto flex max-w-7xl items-center justify-center py-16"
-  style={{
-    paddingLeft: "max(16px, env(safe-area-inset-left))",
-    paddingRight: "max(16px, env(safe-area-inset-right))",
-  }}
->
-<div
-  className="
-    grid w-full items-start justify-center
-    gap-8 md:gap-10 lg:gap-14
-    [grid-template-columns:repeat(auto-fit,minmax(min(92vw,420px),1fr))]
-  "
->
+        className="relative mx-auto flex max-w-7xl items-center justify-center py-16"
+        style={{
+          paddingLeft: "max(16px, env(safe-area-inset-left))",
+          paddingRight: "max(16px, env(safe-area-inset-right))",
+        }}
+      >
+        <div
+          className="
+            grid w-full items-start justify-items-center
+            gap-8
+            grid-cols-1
+            md:grid-cols-3 md:gap-14
+          "
+        >
           {visibleCards.map((c, idx) => (
             <GlassCard
               key={c.id ?? idx}
