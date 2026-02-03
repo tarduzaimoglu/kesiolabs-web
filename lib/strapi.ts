@@ -373,12 +373,28 @@ return items
 /**
  * ✅ Products: image (multi) + category_product relation
  */
-export async function getCatalogProducts(): Promise<any[]> {
+export async function getCatalogProducts(
+  page = 1,
+  pageSize = 20,
+  categoryKey?: string
+): Promise<{ items: any[]; pagination: any }> {
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeSize = Math.max(1, Math.min(200, Number(pageSize) || 20));
+
+  // kategori filtresi (featured hariç)
+  const categoryFilter =
+    categoryKey && categoryKey !== "featured"
+      ? `&filters[category_product][slug][$eq]=${encodeURIComponent(categoryKey)}`
+      : "";
+
   const path =
     "/api/products" +
     "?sort=order:asc" +
     "&sort=createdAt:desc" +
+    `&pagination[page]=${safePage}` +
+    `&pagination[pageSize]=${safeSize}` +
     "&filters[isActive][$eq]=true" +
+    categoryFilter +
     "&populate[0]=image" +
     "&populate[1]=category_product" +
     "&fields[0]=title" +
@@ -393,19 +409,23 @@ export async function getCatalogProducts(): Promise<any[]> {
 
   const res = await strapiFetch<any>(path);
   const items = unwrapCollection(res);
+  const pagination = res?.meta?.pagination ?? {
+    page: safePage,
+    pageSize: safeSize,
+    pageCount: 1,
+    total: items.length,
+  };
 
-  return items.map((x: AnyObj) => {
+  const mapped = items.map((x: AnyObj) => {
     const cat = unwrapRelation(x?.category_product);
     const categoryKey = String(cat?.slug ?? cat?.key ?? "");
 
-    // ✅ image artık multi olabilir: imageUrls üret
     const imgField = x?.image;
 
-const imageUrls = (Array.isArray(imgField) ? imgField : [imgField])
-  .map((m: any) => getMediaUrl(m))
-  .filter((u): u is string => typeof u === "string" && u.length > 0);
+    const imageUrls = (Array.isArray(imgField) ? imgField : [imgField])
+      .map((m: any) => getMediaUrl(m))
+      .filter((u): u is string => typeof u === "string" && u.length > 0);
 
-    // ✅ geriye dönük uyum: tek imageUrl / image ver
     const primaryImg = imageUrls[0] || x?.imageUrl || "";
 
     return {
@@ -413,23 +433,26 @@ const imageUrls = (Array.isArray(imgField) ? imgField : [imgField])
       title: x?.title || "",
       category: categoryKey || "other",
       featured: !!x?.featured,
-      createdAtISO: x?.createdAt ? new Date(x.createdAt).toISOString() : new Date().toISOString(),
+      createdAtISO: x?.createdAt
+        ? new Date(x.createdAt).toISOString()
+        : new Date().toISOString(),
 
-      // ✅ UI tarafı için
       imageUrls,
-         primaryImg,
+      primaryImg,
       image: primaryImg,
 
-      wholesalePrice: typeof x?.wholesalePrice === "number" ? x.wholesalePrice : undefined,
+      wholesalePrice:
+        typeof x?.wholesalePrice === "number" ? x.wholesalePrice : undefined,
       minQtyText: x?.minQtyText || "",
 
       bullets: normalizeStringArray(x?.bullets),
       specs: normalizeStringArray(x?.specs),
 
-      // ✅ bu kaldı
       qtyNoteRich: typeof x?.qtyNoteRich === "string" ? x.qtyNoteRich : "",
     };
   });
+
+  return { items: mapped, pagination };
 }
 
 /* ---------------------------------------

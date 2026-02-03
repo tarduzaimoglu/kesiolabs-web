@@ -2,8 +2,19 @@ import ProductsClient from "./ProductsClient";
 import { CartIndicator } from "@/components/cart/CartIndicator";
 import { getCatalogProducts, getCatalogCategories } from "@/lib/strapi";
 
-export default async function ProductsPage() {
-  const [products, cats] = await Promise.all([getCatalogProducts(), getCatalogCategories()]);
+const PAGE_SIZE = 20;
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  const page = Math.max(1, Number(searchParams?.page ?? "1") || 1);
+
+  const [products, cats] = await Promise.all([
+    getCatalogProducts(page, PAGE_SIZE),
+    getCatalogCategories(),
+  ]);
 
   const categories = [{ key: "featured", label: "Öne Çıkanlar" }, ...cats];
 
@@ -18,7 +29,11 @@ export default async function ProductsPage() {
         </div>
 
         <div className="mt-6">
-          <ProductsClient products={products} categories={categories} defaultCat="featured" />
+          <ProductsClient
+            products={products}
+            categories={categories}
+            defaultCat="featured"
+          />
         </div>
       </div>
     </main>
