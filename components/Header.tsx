@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { label: "Ana Sayfa", href: "/main" },
   { label: "Teklif Al", href: "/quote" },
-  { label: "Ürün Kataloğu", href: "https://www.toptan3dcim.com/products" },
   { label: "Firmanıza Özel Ürünler", href: "/custom-products" },
   { label: "Blog", href: "/blog" },
   { label: "Hakkımızda", href: "/about" },
