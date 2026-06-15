@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Clock, Instagram, Info, Mail, Phone } from "lucide-react";
 
-const ADDRESS_LINE_1 = "İstanbul Maltepe, Fındıklı Mahallesi";
-const ADDRESS_LINE_2 = "Ermiş Sokak No: 17";
+const ADDRESS_LINE_1 = "Acıbadem Mahallesi, Akçaağaç Sokak No: 8";
+const ADDRESS_LINE_2 = "Üsküdar, İSTANBUL";
 const FULL_ADDRESS = `${ADDRESS_LINE_1} ${ADDRESS_LINE_2}`;
 
 const MAPS_DIRECTIONS_URL =
-  "https://www.google.com/maps/dir/?api=1&destination=" +
+  "https://maps.app.goo.gl/1NPdKWPRqqdRNDpLA" +
   encodeURIComponent(FULL_ADDRESS);
 
 export default function Footer() {
@@ -32,7 +32,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 block text-white/80 hover:text-white transition-colors"
-              title="Google Haritalar'da yol tarifi al"
+              title="Haritalar'da yol tarifi al"
             >
               <p>{ADDRESS_LINE_1}</p>
               <p className="mt-1">{ADDRESS_LINE_2}</p>
@@ -52,6 +52,14 @@ export default function Footer() {
             </a>
 
             <a
+              href="tel:+905465868005"
+              className="mt-5 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
+            >
+              <Phone className="h-4 w-4" />
+              <span>+(90) 533 383 94 38</span>
+            </a>
+
+            <a
               href="tel:+905537538182"
               className="mt-3 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
             >
@@ -60,7 +68,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="mailto:kesiolabs.contact@gmail.com"
+              href="mailto:info@kesiolabs.com"
               className="mt-3 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
             >
               <Mail className="h-4 w-4" />
