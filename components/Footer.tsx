@@ -6,7 +6,7 @@ const ADDRESS = "Acıbadem Mahallesi, Akçaağaç Sokak No: 8 Üsküdar, İSTANB
 
 // URL'yi verdiğin yeni yapıya göre güncelledik
 const MAPS_DIRECTIONS_URL =
-  "https://maps.app.goo.gl/YdqoQJQk2nkcW62W9" +
+  "https://www.google.com/maps/search/?api=1&query=" + 
   encodeURIComponent(ADDRESS);
 
 export default function Footer() {
