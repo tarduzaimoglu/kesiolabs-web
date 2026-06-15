@@ -24,7 +24,7 @@ export default function Footer() {
           {/* Col 1 */}
           <div>
             <h3 className="text-lg font-semibold">
-              KesioLabs Endüstriyel Tasarım &amp; 3D Printing
+              KesioLabs Endüstriyel Tasarım & 3D Printing
             </h3>
 
             <a
@@ -50,6 +50,7 @@ export default function Footer() {
               <Phone className="h-4 w-4" />
               <span>+(90) 546 586 8005</span>
             </a>
+          </div>
 
           {/* Col 3 */}
           <div>
@@ -119,7 +120,7 @@ export default function Footer() {
                   className="inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
                 >
                   <Info className="h-4 w-4" />
-                  Teslimat &amp; İade
+                  Teslimat & İade
                 </Link>
               </li>
 
