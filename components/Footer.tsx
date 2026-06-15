@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Clock, Instagram, Info, Mail, Phone } from "lucide-react";
 
-const ADDRESS_LINE_1 = "Acıbadem Mahallesi, Akçaağaç Sokak No: 8";
-const ADDRESS_LINE_2 = "Üsküdar, İSTANBUL";
-const FULL_ADDRESS = `${ADDRESS_LINE_1} ${ADDRESS_LINE_2}`;
+// Adresi tek satırda birleştirdik
+const ADDRESS = "Acıbadem Mahallesi, Akçaağaç Sokak No: 8 Üsküdar, İSTANBUL";
 
+// URL'yi verdiğin yeni yapıya göre güncelledik
 const MAPS_DIRECTIONS_URL =
-  "https://www.google.com/maps/dir/?api=1&destination=Ac%C4%B1badem+Mahallesi%2C+Ak%C3%A7aa%C4%9Fa%C3%A7+Sokak+No%3A8%2C+%C3%9Csk%C3%BCdar%2F%C4%B0stanbul" +
-  encodeURIComponent(FULL_ADDRESS);
+  "https://maps.app.goo.gl/YdqoQJQk2nkcW62W9" +
+  encodeURIComponent(ADDRESS);
 
 export default function Footer() {
   return (
@@ -34,8 +34,8 @@ export default function Footer() {
               className="mt-5 block text-white/80 hover:text-white transition-colors"
               title="Haritalar'da yol tarifi al"
             >
-              <p>{ADDRESS_LINE_1}</p>
-              <p className="mt-1">{ADDRESS_LINE_2}</p>
+              {/* Adres artık tek bir paragraf içinde, tek satırda */}
+              <p>{ADDRESS}</p>
             </a>
           </div>
 
