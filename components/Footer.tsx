@@ -6,7 +6,7 @@ const ADDRESS_LINE_2 = "Üsküdar, İSTANBUL";
 const FULL_ADDRESS = `${ADDRESS_LINE_1} ${ADDRESS_LINE_2}`;
 
 const MAPS_DIRECTIONS_URL =
-  "https://maps.app.goo.gl/1NPdKWPRqqdRNDpLA" +
+  "https://www.google.com/maps/place/Acıbadem,+Akçaağaç+Sk.+No:8,+34660+Üsküdar%2Fİstanbul/@41.0121105,29.0547743,18z/data=!3m1!4b1!4m6!3m5!1s0x14cac807a778d0ad:0xeca582e8b750ae4b!8m2!3d41.0121105!4d29.0547743!16s%2Fg%2F11c18vs7f3?entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D" +
   encodeURIComponent(FULL_ADDRESS);
 
 export default function Footer() {
@@ -42,15 +42,7 @@ export default function Footer() {
           {/* Col 2 */}
           <div>
             <h4 className="text-base font-semibold">İletişim</h4>
-
-            <a
-              href="tel:+905333839438"
-              className="mt-5 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              <span>+(90) 533 383 94 38</span>
-            </a>
-
+            
             <a
               href="tel:+905465868005"
               className="mt-5 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
@@ -58,23 +50,6 @@ export default function Footer() {
               <Phone className="h-4 w-4" />
               <span>+(90) 546 586 8005</span>
             </a>
-
-            <a
-              href="tel:+905537538182"
-              className="mt-3 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              <span>+(90) 553 753 81 82</span>
-            </a>
-
-            <a
-              href="mailto:info@kesiolabs.com"
-              className="mt-3 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              <span>info@kesiolabs.com</span>
-            </a>
-          </div>
 
           {/* Col 3 */}
           <div>
