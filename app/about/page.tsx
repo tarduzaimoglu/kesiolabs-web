@@ -1,8 +1,8 @@
 // app/about/page.tsx
 import Image from "next/image";
+import { Cpu, Target, Users } from "lucide-react"; // Yeni tasarımdaki şık ikonlar
 
-const STRAPI_URL =
-  process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN || "";
 
 type NormalizedMedia = {
@@ -12,74 +12,24 @@ type NormalizedMedia = {
   height?: number | null;
 };
 
+// --- VERİ DÜZENLEME FONKSİYONLARI (DOKUNULMADI) ---
 function normalizeMedia(input: any): NormalizedMedia | null {
   if (!input) return null;
-
-  // Strapi v5 (media direkt obje)
-  if (typeof input?.url === "string") {
-    return {
-      url: input.url,
-      alternativeText: input.alternativeText ?? null,
-      width: input.width ?? null,
-      height: input.height ?? null,
-    };
-  }
-
-  // Bazı kurulumlar: { data: { url } }
-  if (typeof input?.data?.url === "string") {
-    return {
-      url: input.data.url,
-      alternativeText: input.data.alternativeText ?? null,
-      width: input.data.width ?? null,
-      height: input.data.height ?? null,
-    };
-  }
-
-  // Strapi v4: { data: { attributes: { url } } }
+  if (typeof input?.url === "string") return { url: input.url, alternativeText: input.alternativeText ?? null, width: input.width ?? null, height: input.height ?? null };
+  if (typeof input?.data?.url === "string") return { url: input.data.url, alternativeText: input.data.alternativeText ?? null, width: input.data.width ?? null, height: input.data.height ?? null };
   const v4attrs = input?.data?.attributes;
-  if (v4attrs?.url) {
-    return {
-      url: v4attrs.url,
-      alternativeText: v4attrs.alternativeText ?? null,
-      width: v4attrs.width ?? null,
-      height: v4attrs.height ?? null,
-    };
-  }
-
-  // { data: [ { attributes: { url } } ] }
+  if (v4attrs?.url) return { url: v4attrs.url, alternativeText: v4attrs.alternativeText ?? null, width: v4attrs.width ?? null, height: v4attrs.height ?? null };
   const v4arr0 = Array.isArray(input?.data) ? input.data[0]?.attributes : null;
-  if (v4arr0?.url) {
-    return {
-      url: v4arr0.url,
-      alternativeText: v4arr0.alternativeText ?? null,
-      width: v4arr0.width ?? null,
-      height: v4arr0.height ?? null,
-    };
-  }
-
-  // { attributes: { url } }
+  if (v4arr0?.url) return { url: v4arr0.url, alternativeText: v4arr0.alternativeText ?? null, width: v4arr0.width ?? null, height: v4arr0.height ?? null };
   const attrs = input?.attributes;
-  if (attrs?.url) {
-    return {
-      url: attrs.url,
-      alternativeText: attrs.alternativeText ?? null,
-      width: attrs.width ?? null,
-      height: attrs.height ?? null,
-    };
-  }
-
-  // Direkt string: "/uploads/xxx.png"
-  if (typeof input === "string" && input.includes("/")) {
-    return { url: input, alternativeText: null, width: null, height: null };
-  }
-
+  if (attrs?.url) return { url: attrs.url, alternativeText: attrs.alternativeText ?? null, width: attrs.width ?? null, height: attrs.height ?? null };
+  if (typeof input === "string" && input.includes("/")) return { url: input, alternativeText: null, width: null, height: null };
   return null;
 }
 
 function absStrapiUrl(maybeRelative?: string) {
   if (!maybeRelative) return "";
-  if (maybeRelative.startsWith("http://") || maybeRelative.startsWith("https://"))
-    return maybeRelative;
+  if (maybeRelative.startsWith("http://") || maybeRelative.startsWith("https://")) return maybeRelative;
   return `${STRAPI_URL}${maybeRelative}`;
 }
 
@@ -110,94 +60,53 @@ type AboutPageData = {
   intro1?: string;
   intro2?: string;
   body2?: string;
-
-  // SADECE BU 4 GÖRSEL
   heroImageDesktop?: any;
   heroImageMobile?: any;
   midImageDesktop?: any;
   midImageMobile?: any;
-
   heroAlt?: string;
   midAlt?: string;
-
   teamTitle?: string;
   team?: TeamMember[];
   body1?: any;
 };
 
+// --- FETCH FONKSİYONLARI (DOKUNULMADI) ---
 async function fetchJson(url: string) {
   const res = await fetch(url, {
-    headers: {
-      ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}),
-    },
+    headers: { ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}) },
     cache: "no-store",
   });
-
-  const status = res.status;
   let json: any = null;
-  try {
-    json = await res.json();
-  } catch {}
-
-  return { ok: res.ok, status, json };
+  try { json = await res.json(); } catch {}
+  return { ok: res.ok, status: res.status, json };
 }
 
-async function fetchAboutPage(): Promise<{
-  ok: boolean;
-  status: number;
-  url: string;
-  raw: any | null;
-  data: AboutPageData | null;
-}> {
-  // ✅ Senin Strapi'nin kabul ettiği format: populate[0]=...
-  // Sadece 4 görsel + team populate
-  const url =
-    `${STRAPI_URL}/api/about-page` +
-    `?populate[0]=heroImageDesktop` +
-    `&populate[1]=heroImageMobile` +
-    `&populate[2]=midImageDesktop` +
-    `&populate[3]=midImageMobile` +
-    `&populate[4]=team` +
-    `&populate[5]=team.photo`;
-
+async function fetchAboutPage(): Promise<{ ok: boolean; status: number; url: string; raw: any | null; data: AboutPageData | null; }> {
+  const url = `${STRAPI_URL}/api/about-page?populate[0]=heroImageDesktop&populate[1]=heroImageMobile&populate[2]=midImageDesktop&populate[3]=midImageMobile&populate[4]=team&populate[5]=team.photo`;
   const r = await fetchJson(url);
   const d = r.json?.data;
   const data: AboutPageData | null = d ? (d.attributes ?? d) : null;
-
   return { ok: r.ok, status: r.status, url, raw: r.json ?? null, data };
 }
 
-// max-w olsa bile full-bleed
-function FullBleed({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
-      {children}
-    </div>
-  );
-}
-
+// --- YENİ EKRAN TASARIMI (UI) ---
 export default async function AboutPage() {
   const result = await fetchAboutPage();
 
   if (!result.ok || !result.data) {
     return (
-      <div className="mx-auto max-w-[1100px] px-6 py-16">
-        <h1 className="text-3xl font-semibold">AboutPage yüklenemedi</h1>
-        <div className="mt-6 rounded-xl border bg-white p-6 text-sm">
-          <div className="font-medium">STRAPI_URL: {STRAPI_URL}</div>
-          <div className="font-medium">Fetch URL: {result.url}</div>
-          <div className="font-medium">Status: {result.status}</div>
-          <pre className="mt-4 overflow-auto rounded-lg bg-slate-50 p-4">
-            {JSON.stringify(result.raw, null, 2)}
-          </pre>
+      <div className="mx-auto max-w-4xl px-6 py-24 text-white">
+        <h1 className="text-3xl font-semibold text-rose-500">Sayfa verileri yüklenemedi.</h1>
+        <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-6 text-sm font-mono">
+          <div>Status: {result.status}</div>
+          <div>URL: {result.url}</div>
         </div>
       </div>
     );
   }
 
   const a = result.data;
-
-  // SADECE 4 GÖRSEL
   const heroD = normalizeMedia(a.heroImageDesktop);
   const heroM = normalizeMedia(a.heroImageMobile);
   const midD = normalizeMedia(a.midImageDesktop);
@@ -211,200 +120,147 @@ export default async function AboutPage() {
   const body1Paras = textFromBlocks(a.body1);
   const team = Array.isArray(a.team) ? a.team : [];
 
-  // Ölçüler
-  const WHITE_OVER_HERO_MB = "mt-[-96px]";
-  const WHITE_OVER_HERO_MD = "md:mt-[-192px]";
-  const RADIUS_MB = "rounded-tl-[96px]";
-  const RADIUS_MD = "md:rounded-tl-[192px]";
-  const MID_OVER_WHITE_MB = "-mt-[32px]";
-  const MID_OVER_WHITE_MD = "md:-mt-[48px]";
-  const WHITE_PB_MB = "pb-[96px]";
-  const WHITE_PB_MD = "md:pb-[140px]";
-
   return (
-    <main className="bg-white">
-      {/* HERO (radius YOK) */}
-      <FullBleed>
-        <section className="relative w-full">
-          <div
-            className="
-              relative w-full overflow-hidden bg-slate-100
-              h-[42vh] min-h-[280px] max-h-[520px]
-              md:h-[52vh] md:min-h-[360px] md:max-h-[640px]
-            "
-          >
-            {heroMUrl ? (
-              <Image
-                src={heroMUrl}
-                alt={a.heroAlt || heroM?.alternativeText || "Hero"}
-                fill
-                className="object-cover md:hidden"
-                priority
-                sizes="100vw"
-                unoptimized
-              />
-            ) : null}
+    <main className="min-h-screen bg-[#0b1120] text-slate-300 font-sans pb-24 overflow-hidden">
+      
+      {/* 1. KAHRAMAN BÖLÜMÜ (HERO) */}
+      <section className="relative w-full h-[65vh] min-h-[500px] flex flex-col justify-center items-center px-6 overflow-hidden">
+        {/* Arka Plan Görseli & Karanlık Geçiş (Gradient Overlay) */}
+        <div className="absolute inset-0 z-0">
+          {heroDUrl && <Image src={heroDUrl} alt="Hero Desktop" fill className="object-cover hidden md:block" priority unoptimized />}
+          {heroMUrl && <Image src={heroMUrl} alt="Hero Mobile" fill className="object-cover md:hidden" priority unoptimized />}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b1120]/60 via-[#0b1120]/80 to-[#0b1120]" />
+        </div>
 
-            {heroDUrl ? (
-              <Image
-                src={heroDUrl}
-                alt={a.heroAlt || heroD?.alternativeText || "Hero"}
-                fill
-                className="hidden md:block object-cover"
-                priority
-                sizes="100vw"
-                unoptimized
-              />
-            ) : null}
+        {/* Başlık ve İlk Paragraf */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center mt-16">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight drop-shadow-md">
+            {a.title || "Hakkımızda"}
+          </h1>
+          {a.intro1 && (
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-light">
+              {a.intro1}
+            </p>
+          )}
+        </div>
+      </section>
 
-            {!heroMUrl && !heroDUrl ? (
-              <div className="flex h-full w-full items-center justify-center text-slate-500">
-                Hero görseli yok
-              </div>
-            ) : null}
-          </div>
-        </section>
-      </FullBleed>
-
-      {/* WHITE BLOCK: sadece sol-üst radius, hero üstüne biner */}
-      <section className="relative z-20">
-        <FullBleed>
-          <div
-            className={[
-              "relative bg-white shadow-[0_20px_60px_rgba(0,0,0,0.08)]",
-              WHITE_OVER_HERO_MB,
-              WHITE_OVER_HERO_MD,
-              RADIUS_MB,
-              RADIUS_MD,
-              WHITE_PB_MB,
-              WHITE_PB_MD,
-            ].join(" ")}
-          >
-            <div className="mx-auto max-w-[1100px] px-6 pt-12 md:pt-16">
-              <h1 className="text-center text-3xl md:text-4xl font-semibold text-slate-900">
-                {a.title || "Hakkımızda"}
-              </h1>
-
-              <div className="mx-auto mt-6 max-w-[860px] space-y-5 text-[13px] md:text-sm leading-6 md:leading-7 text-slate-600 text-center">
-                {a.intro1 ? <p>{a.intro1}</p> : null}
-                {a.intro2 ? <p>{a.intro2}</p> : null}
-              </div>
+      {/* 2. ALTYAPI VE TEKNOLOJİ (Glassmorphism Kartı) */}
+      {a.intro2 && (
+        <section className="relative z-20 max-w-5xl mx-auto px-6 -mt-16 md:-mt-24 mb-24">
+          <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl flex flex-col md:flex-row gap-8 items-start">
+            <div className="shrink-0 p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+              <Cpu className="w-8 h-8 text-indigo-400" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold text-white mb-4">Üretim Altyapımız</h3>
+              <p className="text-base md:text-lg text-slate-400 leading-relaxed">
+                {a.intro2}
+              </p>
             </div>
           </div>
-        </FullBleed>
-      </section>
+        </section>
+      )}
 
-      {/* MID: radius YOK (mobil + desktop) */}
-      <section className="relative z-10">
-        <FullBleed>
-          <div
-            className={[
-              "relative w-full overflow-hidden bg-slate-100 rounded-none",
-              MID_OVER_WHITE_MB,
-              MID_OVER_WHITE_MD,
-              "h-[48vh] min-h-[320px] max-h-[640px]",
-              "md:h-[56vh] md:min-h-[440px] md:max-h-[780px]",
-            ].join(" ")}
-          >
-            {midMUrl ? (
-              <Image
-                src={midMUrl}
-                alt={a.midAlt || midM?.alternativeText || "Mid"}
-                fill
-                className="object-cover md:hidden"
-                sizes="100vw"
-                unoptimized
-              />
-            ) : null}
-
-            {midDUrl ? (
-              <Image
-                src={midDUrl}
-                alt={a.midAlt || midD?.alternativeText || "Mid"}
-                fill
-                className="hidden md:block object-cover"
-                sizes="100vw"
-                unoptimized
-              />
-            ) : null}
-
-            {!midMUrl && !midDUrl ? (
-              <div className="flex h-full w-full items-center justify-center text-slate-500">
-                Mid görseli yok
-              </div>
-            ) : null}
+      {/* 3. PARALLAX GÖRSEL (Ayrıştırıcı Bant) */}
+      {(midDUrl || midMUrl) && (
+        <section className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden my-24 border-y border-white/5">
+          <div className="absolute inset-0 z-0">
+            {midDUrl && <Image src={midDUrl} alt="Mid Desktop" fill className="object-cover hidden md:block" unoptimized />}
+            {midMUrl && <Image src={midMUrl} alt="Mid Mobile" fill className="object-cover md:hidden" unoptimized />}
+            {/* Görseli temanın rengine uyarlayan mavi karartma */}
+            <div className="absolute inset-0 bg-[#0b1120]/70 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-[#0b1120]" />
           </div>
-        </FullBleed>
-      </section>
-
-      {/* BODY */}
-      <section className="mx-auto max-w-[1100px] px-6 pb-16">
-        {body1Paras.length ? (
-          <div className="mx-auto mt-10 max-w-[980px] space-y-4 text-[13px] md:text-sm leading-6 md:leading-7 text-slate-600">
-            {body1Paras.map((p, idx) => (
-              <p key={idx}>{p}</p>
-            ))}
-          </div>
-        ) : null}
-
-        {a.body2 ? (
-          <div className="mx-auto mt-6 max-w-[980px] text-[13px] md:text-sm leading-6 md:leading-7 text-slate-600">
-            <p>{a.body2}</p>
-          </div>
-        ) : null}
-
-        {/* TEAM */}
-        <div className="mt-16">
-          <h2 className="text-center text-2xl md:text-3xl font-semibold text-slate-900">
-            {a.teamTitle || "Ekibimiz"}
+          
+          <h2 className="relative z-10 text-3xl md:text-5xl font-bold text-white tracking-wider text-center px-6 drop-shadow-2xl">
+            {a.midAlt || "Üretilebilir Tasarım Odaklı Çözümler"}
           </h2>
+        </section>
+      )}
 
-          <div className="mt-10 grid gap-6 grid-cols-2 md:gap-8 md:grid-cols-3 lg:grid-cols-4">
+      {/* 4. VİZYON VE YAKLAŞIM BÖLÜMÜ */}
+      <section className="max-w-4xl mx-auto px-6 mb-32 relative">
+        {/* Arka plan ışık efekti */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col gap-10">
+          <div className="flex items-center gap-4 mb-4">
+            <Target className="w-8 h-8 text-indigo-400" />
+            <h3 className="text-3xl font-bold text-white">Yaklaşımımız ve Vizyonumuz</h3>
+          </div>
+          
+          <div className="space-y-8 text-[15px] md:text-[17px] leading-relaxed text-slate-400">
+            {body1Paras.map((p, idx) => (
+              <p key={idx} className="pl-6 border-l-2 border-indigo-500/30">
+                {p}
+              </p>
+            ))}
+            {a.body2 && (
+              <p className="pl-6 border-l-2 border-indigo-500/30">
+                {a.body2}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. EKİBİMİZ */}
+      {team.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col items-center justify-center mb-16 text-center">
+            <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/10 mb-6">
+              <Users className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              {a.teamTitle || "Ekibimiz"}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {team.map((m, idx) => {
-              const photo = normalizeMedia(m.photo);
-              const photoUrl = photo ? absStrapiUrl(photo.url) : "";
+              const photoUrl = m.photo ? absStrapiUrl(normalizeMedia(m.photo)?.url) : "";
 
               return (
-                <div
-                  key={m.id ?? idx}
-                  className="bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden"
-                >
-                  <div className="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden rounded-tl-[45px]">
+                <div key={m.id ?? idx} className="group bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm hover:bg-white/[0.05] transition-all duration-300">
+                  {/* Fotoğraf Alanı */}
+                  <div className="relative w-full aspect-[4/5] bg-black/20 overflow-hidden">
                     {photoUrl ? (
                       <Image
                         src={photoUrl}
-                        alt={m.name || "Team member"}
+                        alt={m.name || "Ekip Üyesi"}
                         fill
-                        className="object-cover object-top"
-                        sizes="(max-width: 1024px) 33vw, 25vw"
+                        className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                         unoptimized
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-slate-400">
-                        Fotoğraf yok
+                      <div className="flex h-full w-full items-center justify-center text-slate-600 font-mono text-sm">
+                        Fotoğraf Yok
                       </div>
                     )}
+                    {/* Resim altına yumuşak geçiş gölgesi */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent opacity-80" />
                   </div>
 
-                  <div className="p-4">
-                    <div className="text-sm md:text-base font-semibold text-slate-900">
-                      {m.name || "-"}
-                    </div>
-                    <div className="mt-1 text-[11px] md:text-xs text-slate-500">
+                  {/* İsim ve Unvan */}
+                  <div className="relative p-6 -mt-8">
+                    <h3 className="text-xl font-bold text-white">{m.name || "-"}</h3>
+                    <p className="text-sm font-medium text-indigo-400 mt-1">
                       {m.role || m.title || ""}
-                    </div>
-                    {m.bio ? (
-                      <div className="mt-2 text-[12px] leading-5 text-slate-600 line-clamp-3">
+                    </p>
+                    {m.bio && (
+                      <p className="mt-4 text-sm leading-relaxed text-slate-400 line-clamp-3">
                         {m.bio}
-                      </div>
-                    ) : null}
+                      </p>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
     </main>
   );
 }
