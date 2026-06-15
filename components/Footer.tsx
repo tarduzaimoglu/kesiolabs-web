@@ -56,7 +56,7 @@ export default function Footer() {
               className="mt-5 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
             >
               <Phone className="h-4 w-4" />
-              <span>+(90) 533 383 94 38</span>
+              <span>+(90) 546 586 8005</span>
             </a>
 
             <a
@@ -72,7 +72,7 @@ export default function Footer() {
               className="mt-3 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
             >
               <Mail className="h-4 w-4" />
-              <span>kesiolabs.contact@gmail.com</span>
+              <span>info@kesiolabs.com</span>
             </a>
           </div>
 
