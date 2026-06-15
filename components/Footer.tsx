@@ -6,7 +6,7 @@ const ADDRESS_LINE_2 = "Üsküdar, İSTANBUL";
 const FULL_ADDRESS = `${ADDRESS_LINE_1} ${ADDRESS_LINE_2}`;
 
 const MAPS_DIRECTIONS_URL =
-  "https://www.google.com/maps/place/Acıbadem,+Akçaağaç+Sk.+No:8,+34660+Üsküdar%2Fİstanbul/@41.0121105,29.0547743,18z/data=!3m1!4b1!4m6!3m5!1s0x14cac807a778d0ad:0xeca582e8b750ae4b!8m2!3d41.0121105!4d29.0547743!16s%2Fg%2F11c18vs7f3?entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D" +
+  "https://www.google.com/maps/dir/?api=1&destination=Ac%C4%B1badem+Mahallesi%2C+Ak%C3%A7aa%C4%9Fa%C3%A7+Sokak+No%3A8%2C+%C3%9Csk%C3%BCdar%2F%C4%B0stanbul" +
   encodeURIComponent(FULL_ADDRESS);
 
 export default function Footer() {
