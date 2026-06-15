@@ -1,145 +1,154 @@
 import Link from "next/link";
-import { Clock, Instagram, Info, Mail, Phone } from "lucide-react";
+import { MapPin, Phone, Mail, Instagram } from "lucide-react";
 
-// Adresi tek satırda birleştirdik
+// Adres ve Harita Bilgileri
 const ADDRESS = "Acıbadem Mahallesi, Akçaağaç Sokak No: 8 Üsküdar, İSTANBUL";
-
-// URL'yi verdiğin yeni yapıya göre güncelledik
 const MAPS_DIRECTIONS_URL =
-  "https://www.google.com/maps/search/?api=1&query=" + 
+  "https://www.google.com/maps/search/?api=1&query=" +
   encodeURIComponent(ADDRESS);
 
 export default function Footer() {
   return (
-    <footer className="relative w-full overflow-hidden bg-[#0b1324] text-white border-t border-white/10">
-      {/* Blur / Glass background layers */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-white/5" />
-        <div className="absolute inset-0 backdrop-blur-xl" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/40" />
-      </div>
+    <footer className="relative w-full bg-[#0b1120] text-slate-300 font-sans border-t border-white/5">
+      {/* İnce bir üst ışık efekti (Görseldeki premium hissiyatı verir) */}
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl px-6 py-14">
-        <div className="grid gap-10 md:grid-cols-4">
-          {/* Col 1 */}
-          <div>
-            <h3 className="text-lg font-semibold">
-              KesioLabs Endüstriyel Tasarım & 3D Printing
+      <div className="relative mx-auto max-w-7xl px-6 py-16">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+          
+          {/* 1. SÜTUN: Marka & Açıklama */}
+          <div className="flex flex-col">
+            <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">
+              Kesio<span className="text-indigo-400">Labs</span>
             </h3>
-
-            <a
-              href={MAPS_DIRECTIONS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 block text-white/80 hover:text-white transition-colors"
-              title="Haritalar'da yol tarifi al"
-            >
-              {/* Adres artık tek bir paragraf içinde, tek satırda */}
-              <p>{ADDRESS}</p>
-            </a>
-          </div>
-
-          {/* Col 2 */}
-          <div>
-            <h4 className="text-base font-semibold">İletişim</h4>
+            <p className="text-sm leading-relaxed text-slate-400 mb-8 pr-4">
+              KesioLabs bünyesinde, işletmeler ve bireyler için yüksek kapasiteli ve kaliteli 3D baskı, endüstriyel tasarım çözümleri sunuyoruz. Hızlı üretim, uygun maliyet.
+            </p>
             
-            <a
-              href="tel:+905465868005"
-              className="mt-5 flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              <span>+(90) 546 586 8005</span>
-            </a>
+            {/* Sigortalı Teslimat Rozeti */}
+            <div className="inline-flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-xl p-3 lg:pr-6 w-fit">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-medium text-white/90 leading-tight">
+                Türkiye'nin Her Yerine <br /> Sigortalı Teslimat
+              </span>
+            </div>
           </div>
 
-          {/* Col 3 */}
+          {/* 2. SÜTUN: İletişim */}
           <div>
-            <h4 className="text-base font-semibold">Çalışma Saatleri</h4>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">BİZE ULAŞIN</h4>
+            <div className="space-y-5">
+              <a href="tel:+905465868005" className="flex items-start gap-4 group">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 group-hover:bg-white/[0.08] transition-colors shrink-0">
+                  <Phone className="w-4 h-4 text-indigo-300" />
+                </div>
+                <div className="flex flex-col justify-center min-h-[2.5rem]">
+                  <span className="text-sm text-slate-400 group-hover:text-white transition-colors">0546 586 80 05</span>
+                </div>
+              </a>
 
-            <div className="mt-5 flex items-center gap-3 text-white/80">
-              <Clock className="h-4 w-4" />
-              <span>Hafta içi: 08:00 - 20:00</span>
+              <a href="mailto:info@kesiolabs.com" className="flex items-start gap-4 group">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 group-hover:bg-white/[0.08] transition-colors shrink-0">
+                  <Mail className="w-4 h-4 text-indigo-300" />
+                </div>
+                <div className="flex flex-col justify-center min-h-[2.5rem]">
+                  <span className="text-sm text-slate-400 group-hover:text-white transition-colors">info@kesiolabs.com</span>
+                </div>
+              </a>
+
+              <a href={MAPS_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 group">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.03] border border-white/10 group-hover:bg-white/[0.08] transition-colors shrink-0">
+                  <MapPin className="w-4 h-4 text-indigo-300" />
+                </div>
+                <div className="flex flex-col justify-center min-h-[2.5rem]">
+                  <span className="text-sm text-slate-400 group-hover:text-white transition-colors leading-relaxed">
+                    Acıbadem Mah. Akçaağaç Sokak <br /> No: 8 Üsküdar / İstanbul
+                  </span>
+                </div>
+              </a>
             </div>
-
-            <div className="mt-3 flex items-center gap-3 text-white/80">
-              <Clock className="h-4 w-4" />
-              <span>Cumartesi: 08:00 - 16:00</span>
-            </div>
-
-            <div className="mt-3 flex items-center gap-3 text-white/80">
-              <Clock className="h-4 w-4" />
-              <span>Pazar: Kapalı</span>
-            </div>
-
-            <small className="mt-4 block text-white/70">
-              Acil durumlarda WhatsApp üzerinden bizimle iletişime
-              geçebilirsiniz.
-            </small>
           </div>
 
-          {/* Col 4 */}
+          {/* 3. SÜTUN: Kurumsal Linkler */}
           <div>
-            <h4 className="text-base font-semibold">Sosyal Medya</h4>
-
-            <a
-              href="https://instagram.com/kesiolabs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-            >
-              <Instagram className="h-4 w-4" />
-              <span>Instagram</span>
-            </a>
-
-            <h4 className="mt-8 text-base font-semibold">Hakkımızda</h4>
-
-            <ul className="mt-4 space-y-3">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">KURUMSAL</h4>
+            <ul className="space-y-4">
               <li>
-                <Link
-                  href="/corporate"
-                  className="inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-                >
-                  <Info className="h-4 w-4" />
-                  Kurumsal
+                <Link href="/corporate" className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
+                  Hakkımızda
                 </Link>
               </li>
-
               <li>
-                <Link
-                  href="/privacy-policy"
-                  className="inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-                >
-                  <Info className="h-4 w-4" />
+                <Link href="/privacy-policy" className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
                   Gizlilik Politikası
                 </Link>
               </li>
-
               <li>
-                <Link
-                  href="/delivery-returns"
-                  className="inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-                >
-                  <Info className="h-4 w-4" />
-                  Teslimat & İade
+                <Link href="/delivery-returns" className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
+                  Mesafeli Satış Sözleşmesi
                 </Link>
               </li>
-
               <li>
-                <Link
-                  href="/faq"
-                  className="inline-flex items-center gap-3 text-white/80 hover:text-white transition-colors"
-                >
-                  <Info className="h-4 w-4" />
+                <Link href="/delivery-returns" className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
+                  Teslimat & İade Koşulları
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-sm text-slate-400 hover:text-indigo-400 transition-colors">
                   Sık Sorulan Sorular
                 </Link>
               </li>
             </ul>
           </div>
+
+          {/* 4. SÜTUN: Çalışma Saatleri & Sosyal Medya */}
+          <div>
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">ÇALIŞMA SAATLERİ</h4>
+            
+            {/* Saatler Kutusu */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-5 mb-6">
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <span className="text-sm text-slate-400">Hafta İçi</span>
+                <span className="text-sm font-medium text-white">08:00 - 20:00</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5">
+                <span className="text-sm text-slate-400">Cumartesi</span>
+                <span className="text-sm font-medium text-white">08:00 - 16:00</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-sm text-slate-400">Pazar</span>
+                <span className="text-sm font-medium text-rose-400">Kapalı</span>
+              </div>
+            </div>
+
+            {/* Sosyal Medya Butonu */}
+            <a 
+              href="https://instagram.com/kesiolabs" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-colors rounded-full pl-2 pr-5 py-2"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10">
+                <span className="text-xs font-bold text-white">IG</span>
+              </div>
+              <span className="text-sm font-medium text-slate-300">BİZİ TAKİP EDİN</span>
+            </a>
+          </div>
+
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 text-center text-sm text-white/60">
-          © 2025 KesioLabs. Tüm hakları saklıdır.
+        {/* ALT BİLGİ ÇUBUĞU (Copyright & Yasal Info) */}
+        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-slate-500">
+            © 2026 <strong className="text-slate-300 font-semibold">KesioLabs</strong> Bilişim ve Teknoloji. Tüm hakları saklıdır.
+          </p>
+          <div className="flex items-center gap-4 text-xs text-slate-500">
+            <span>Vergi No: <span className="text-slate-400">Gerekli İse Eklenebilir</span></span>
+            <span className="w-px h-3 bg-white/10" /> {/* Ayırıcı çizgi */}
+            <span>Mersis No: <span className="text-slate-400">Gerekli İse Eklenebilir</span></span>
+          </div>
         </div>
+
       </div>
     </footer>
   );
