@@ -10,6 +10,7 @@ const navItems = [
   { label: "Firmanıza Özel Ürünler", href: "/custom-products" },
   { label: "Blog", href: "/blog" },
   { label: "Hakkımızda", href: "/about" },
+  { label: "İletişim" , href: "/contact" },
 ];
 
 const LOGO_CLASS = "h-10 w-auto"; // 40px
