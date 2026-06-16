@@ -13,8 +13,7 @@ const navItems = [
   { label: "İletişim", href: "/contact" },
 ];
 
-const LOGO_CLASS = "h-10 w-auto";
-const SIDE_COL = "w-[180px]";
+const LOGO_CLASS = "h-9 w-auto brightness-200 contrast-125 object-contain"; // Logo koyu zeminde parlasın diye
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const SCROLL_STEP = 260;
 const ARROW_COL = "w-[44px]";
@@ -39,7 +38,7 @@ function AnimatedBurger({ open }: { open: boolean }) {
   return (
     <span
       className={[
-        "relative block h-6 w-6",
+        "relative block h-5 w-6",
         "transition-transform duration-300",
         EASE,
         open ? "scale-[0.98]" : "scale-100",
@@ -48,15 +47,15 @@ function AnimatedBurger({ open }: { open: boolean }) {
     >
       <span
         className={[
-          "absolute left-0 top-[6px] h-[2px] w-6 rounded-full bg-slate-200",
+          "absolute left-0 top-[2px] h-[2px] w-6 rounded-full bg-slate-200",
           "transform-gpu transition-all duration-300",
           EASE,
-          open ? "translate-y-[6px] rotate-45" : "translate-y-0 rotate-0",
+          open ? "translate-y-[8px] rotate-45" : "translate-y-0 rotate-0",
         ].join(" ")}
       />
       <span
         className={[
-          "absolute left-0 top-[12px] h-[2px] w-6 rounded-full bg-slate-200",
+          "absolute left-0 top-[10px] h-[2px] w-6 rounded-full bg-slate-200",
           "transform-gpu transition-all duration-200",
           EASE,
           open ? "opacity-0 scale-x-50" : "opacity-100 scale-x-100",
@@ -67,7 +66,7 @@ function AnimatedBurger({ open }: { open: boolean }) {
           "absolute left-0 top-[18px] h-[2px] w-6 rounded-full bg-slate-200",
           "transform-gpu transition-all duration-300",
           EASE,
-          open ? "-translate-y-[6px] -rotate-45" : "translate-y-0 rotate-0",
+          open ? "-translate-y-[8px] -rotate-45" : "translate-y-0 rotate-0",
         ].join(" ")}
       />
     </span>
@@ -77,10 +76,10 @@ function AnimatedBurger({ open }: { open: boolean }) {
 function ArrowButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
   const commonClass = [
     "h-9 w-9 rounded-full",
-    "flex items-center justify-center",
+    "flex items-center justify-center shrink-0",
     "transition-all duration-300",
     EASE,
-    "border border-white/10 bg-white/5 backdrop-blur-md",
+    "border border-white/10 bg-[#0b1120] backdrop-blur-md",
     "shadow-[0_0_15px_rgba(0,0,0,0.2)]",
     "hover:bg-white/10 hover:border-indigo-500/30",
     "active:scale-[0.95]",
@@ -102,17 +101,24 @@ export default function Header() {
   const [hasOverflow, setHasOverflow] = useState(false);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Scroll durumunu algıla (Arka plan bulanıklığını artırmak için)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const updateOverflowState = () => {
     const el = scrollerRef.current;
     if (!el) return;
-
     const overflow = el.scrollWidth > el.clientWidth + 1;
     setHasOverflow(overflow);
-
     const left = el.scrollLeft > 2;
     const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
-
     setCanLeft(overflow && left);
     setCanRight(overflow && right);
   };
@@ -128,20 +134,16 @@ export default function Header() {
     const el = scrollerRef.current;
     if (!el) return;
     if (!hasOverflow) return;
-
     const dx = Math.abs(e.deltaX);
     const dy = Math.abs(e.deltaY);
     const move = dx > dy ? e.deltaX : e.deltaY;
-
     e.preventDefault();
     el.scrollLeft += move;
   };
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
   useEffect(() => {
@@ -157,16 +159,12 @@ export default function Header() {
     updateOverflowState();
     const el = scrollerRef.current;
     if (!el) return;
-
     const onScroll = () => updateOverflowState();
     el.addEventListener("scroll", onScroll, { passive: true });
-
     const ro = new ResizeObserver(() => updateOverflowState());
     ro.observe(el);
-
     const t = window.setTimeout(updateOverflowState, 60);
     window.addEventListener("resize", updateOverflowState);
-
     return () => {
       window.clearTimeout(t);
       window.removeEventListener("resize", updateOverflowState);
@@ -179,184 +177,203 @@ export default function Header() {
   const rightArrowVisible = hasOverflow && canRight;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#0b1120]/80 backdrop-blur-lg border-b border-white/10 shadow-lg font-sans">
-      <div className="w-full px-6 max-w-[1600px] mx-auto">
-        <div className="flex h-20 items-center justify-between md:justify-start">
-          
-          {/* [ SOL BLOK ] (logo) */}
-          <div className="flex-shrink-0 w-auto md:w-[180px]">
-            <Link href="/" className="inline-flex hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
-              <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
-            </Link>
-          </div>
-
-          {/* [ SOL YÖN OKU ] */}
-          <div
-            className={[
-              "hidden md:flex flex-shrink-0 items-center justify-center",
-              "transition-[width,opacity] duration-200",
-              EASE,
-              hasOverflow ? ARROW_COL : "w-0",
-              leftArrowVisible ? "opacity-100" : "opacity-0",
-              hasOverflow ? "" : "pointer-events-none",
-            ].join(" ")}
-          >
-            {hasOverflow && (
-              <div className={leftArrowVisible ? "" : "opacity-0 pointer-events-none"}>
-                <ArrowButton dir="left" onClick={() => scrollByDir("left")} />
-              </div>
-            )}
-          </div>
-
-          {/* [ ORTA NAV ] */}
-          <nav className="hidden md:flex flex-1 min-w-0 justify-center">
-            <div
-              ref={scrollerRef}
-              className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth px-4"
-              onWheel={onWheelHorizontal}
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              {navItems.map((item, i) => (
-                <div key={item.href} className="flex items-center gap-8">
-                  <Link
-                    href={item.href}
-                    className={`
-                      shrink-0 transition-colors duration-300 text-sm font-medium tracking-wide
-                      ${activePath === item.href
-                          ? "text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
-                          : "text-slate-300 hover:text-white"
-                      }
-                    `}
-                  >
-                    {item.label}
-                  </Link>
-
-                  {i !== navItems.length - 1 && (
-                    <span className="h-4 w-px bg-white/10 shrink-0" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </nav>
-
-          {/* [ SAĞ YÖN OKU ] */}
-          <div
-            className={[
-              "hidden md:flex flex-shrink-0 items-center justify-center",
-              "transition-[width,opacity] duration-200",
-              EASE,
-              hasOverflow ? ARROW_COL : "w-0",
-              rightArrowVisible ? "opacity-100" : "opacity-0",
-              hasOverflow ? "" : "pointer-events-none",
-            ].join(" ")}
-          >
-            {hasOverflow && (
-              <div className={rightArrowVisible ? "" : "opacity-0 pointer-events-none"}>
-                <ArrowButton dir="right" onClick={() => scrollByDir("right")} />
-              </div>
-            )}
-          </div>
-
-          {/* [ SAĞ BLOK ] (mobile burger) */}
-          <div className="flex-shrink-0 w-auto md:w-[180px] flex items-center justify-end">
-            <button
-              type="button"
-              aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-              className="md:hidden inline-flex items-center justify-center rounded-xl p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-              onClick={() => setOpen((v) => !v)}
-            >
-              <AnimatedBurger open={open} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* --- MOBILE SHEET (SAĞDAN AÇILAN MENÜ) --- */}
-      <div
-        className={[
-          "md:hidden fixed inset-0 z-[60]",
-          open ? "pointer-events-auto" : "pointer-events-none",
-        ].join(" ")}
-        aria-hidden={!open}
+    <>
+      {/* Header fixed yapıldı, sayfa aşağı kaydırılsa bile üstte kalacak.
+        Arkasındaki içerik Header'ın altında kalmasın diye en dışa bir padding atadık (pt-20).
+      */}
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 font-sans border-b
+          ${isScrolled 
+            ? "bg-[#0b1120]/90 backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] py-2" 
+            : "bg-[#0b1120]/60 backdrop-blur-md border-transparent py-4"}
+        `}
       >
-        {/* Backdrop (Karanlık Arka Plan) */}
-        <button
-          aria-label="Menüyü kapat"
-          onClick={() => setOpen(false)}
-          className={[
-            "absolute inset-0 bg-black/60 backdrop-blur-sm",
-            "transition-opacity duration-300",
-            EASE,
-            open ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-        />
+        <div className="w-full px-4 md:px-6 max-w-[1600px] mx-auto">
+          <div className="flex items-center justify-between md:justify-start h-14">
+            
+            {/* [ SOL BLOK ] (logo) */}
+            <div className="flex-shrink-0 w-auto md:w-[220px]">
+              <Link href="/" className="inline-flex hover:opacity-80 transition-opacity" onClick={() => setOpen(false)}>
+                <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
+              </Link>
+            </div>
 
-        {/* Sheet Panel (Buzlu Cam Panel) */}
-        <div
-          className={[
-            "absolute right-0 top-0 h-full w-[86%] max-w-[420px]",
-            "bg-[#0b1120]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl",
-            "transform-gpu transition-all duration-300 flex flex-col",
-            EASE,
-            open ? "translate-x-0 opacity-100 scale-100" : "translate-x-full opacity-0 scale-[0.98]",
-          ].join(" ")}
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
-        >
-          {/* Sheet Header */}
-          <div className="flex h-20 items-center justify-between px-6 border-b border-white/10 shrink-0">
-            <p className="text-[13px] font-medium tracking-widest uppercase text-indigo-400/80">
-              KesioLabs
-            </p>
-            <button
-              type="button"
-              aria-label="Menüyü kapat"
-              className="inline-flex items-center justify-center rounded-xl p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-              onClick={() => setOpen(false)}
+            {/* [ SOL YÖN OKU ] */}
+            <div
+              className={[
+                "hidden md:flex flex-shrink-0 items-center justify-center",
+                "transition-[width,opacity] duration-200",
+                EASE,
+                hasOverflow ? ARROW_COL : "w-0",
+                leftArrowVisible ? "opacity-100" : "opacity-0",
+                hasOverflow ? "" : "pointer-events-none",
+              ].join(" ")}
             >
-              <AnimatedBurger open={true} />
-            </button>
-          </div>
+              {hasOverflow && (
+                <div className={leftArrowVisible ? "" : "opacity-0 pointer-events-none"}>
+                  <ArrowButton dir="left" onClick={() => scrollByDir("left")} />
+                </div>
+              )}
+            </div>
 
-          {/* Links (Mobil Menü Kartları) */}
-          <nav className="px-6 py-8 overflow-y-auto flex-1">
-            <ul className="flex flex-col gap-4">
-              {navItems.map((item, idx) => {
-                const isActive = activePath === item.href;
-                return (
-                  <li
-                    key={item.href}
-                    className={[
-                      "transform-gpu transition-all duration-500",
-                      EASE,
-                      open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
-                    ].join(" ")}
-                    style={{ transitionDelay: open ? `${100 + idx * 60}ms` : "0ms" }}
-                  >
+            {/* [ ORTA NAV ] */}
+            <nav className="hidden md:flex flex-1 min-w-0 justify-center">
+              <div
+                ref={scrollerRef}
+                className="no-scrollbar flex items-center gap-8 overflow-x-auto whitespace-nowrap scroll-smooth px-4"
+                onWheel={onWheelHorizontal}
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                {navItems.map((item, i) => (
+                  <div key={item.href} className="flex items-center gap-8">
                     <Link
                       href={item.href}
-                      onClick={() => setOpen(false)}
                       className={`
-                        block w-full rounded-2xl px-5 py-4
-                        text-[16px] font-semibold transition-all duration-300
-                        border backdrop-blur-md
-                        ${isActive
-                            ? "text-indigo-300 bg-indigo-500/10 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
-                            : "text-slate-300 bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20 hover:text-white"
+                        shrink-0 transition-all duration-300 text-[14px] font-semibold tracking-wide
+                        ${activePath === item.href
+                            ? "text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+                            : "text-slate-300 hover:text-white"
                         }
                       `}
                     >
                       {item.label}
                     </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+
+                    {i !== navItems.length - 1 && (
+                      <span className="h-4 w-px bg-white/10 shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </nav>
+
+            {/* [ SAĞ YÖN OKU ] */}
+            <div
+              className={[
+                "hidden md:flex flex-shrink-0 items-center justify-center",
+                "transition-[width,opacity] duration-200",
+                EASE,
+                hasOverflow ? ARROW_COL : "w-0",
+                rightArrowVisible ? "opacity-100" : "opacity-0",
+                hasOverflow ? "" : "pointer-events-none",
+              ].join(" ")}
+            >
+              {hasOverflow && (
+                <div className={rightArrowVisible ? "" : "opacity-0 pointer-events-none"}>
+                  <ArrowButton dir="right" onClick={() => scrollByDir("right")} />
+                </div>
+              )}
+            </div>
+
+            {/* [ SAĞ BLOK ] (mobile burger) */}
+            <div className="flex-shrink-0 w-auto md:w-[220px] flex items-center justify-end">
+              <button
+                type="button"
+                aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
+                className="md:hidden inline-flex items-center justify-center rounded-xl w-12 h-12 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                onClick={() => setOpen((v) => !v)}
+              >
+                <AnimatedBurger open={open} />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+
+        {/* --- MOBILE SHEET (SAĞDAN AÇILAN MENÜ) --- */}
+        <div
+          className={[
+            "md:hidden fixed inset-0 z-[60]",
+            open ? "pointer-events-auto" : "pointer-events-none",
+          ].join(" ")}
+          aria-hidden={!open}
+        >
+          {/* Backdrop (Karanlık Arka Plan) */}
+          <button
+            aria-label="Menüyü kapat"
+            onClick={() => setOpen(false)}
+            className={[
+              "absolute inset-0 bg-black/60 backdrop-blur-sm",
+              "transition-opacity duration-300",
+              EASE,
+              open ? "opacity-100" : "opacity-0",
+            ].join(" ")}
+          />
+
+          {/* Sheet Panel (Buzlu Cam Panel) */}
+          <div
+            className={[
+              "absolute right-0 top-0 h-full w-[85%] max-w-[380px]",
+              "bg-[#0b1120]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl",
+              "transform-gpu transition-all duration-300 flex flex-col",
+              EASE,
+              open ? "translate-x-0 opacity-100 shadow-[-20px_0_40px_rgba(0,0,0,0.5)]" : "translate-x-full opacity-0",
+            ].join(" ")}
+            style={{
+              paddingTop: "env(safe-area-inset-top)",
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+          >
+            {/* Mobil Menü Header (LOGO BURAYA GELDİ) */}
+            <div className="flex h-[88px] items-center justify-between px-6 border-b border-white/10 shrink-0">
+              <Link href="/" onClick={() => setOpen(false)}>
+                <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
+              </Link>
+              <button
+                type="button"
+                aria-label="Menüyü kapat"
+                className="inline-flex items-center justify-center rounded-xl w-11 h-11 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                {/* Çarpı İkonu */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Links (Mobil Menü Kartları) */}
+            <nav className="px-6 py-8 overflow-y-auto flex-1">
+              <ul className="flex flex-col gap-4">
+                {navItems.map((item, idx) => {
+                  const isActive = activePath === item.href;
+                  return (
+                    <li
+                      key={item.href}
+                      className={[
+                        "transform-gpu transition-all duration-500",
+                        EASE,
+                        open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
+                      ].join(" ")}
+                      style={{ transitionDelay: open ? `${100 + idx * 60}ms` : "0ms" }}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={`
+                          block w-full rounded-2xl px-5 py-4
+                          text-[16px] font-semibold transition-all duration-300
+                          border backdrop-blur-md
+                          ${isActive
+                              ? "text-indigo-300 bg-indigo-500/10 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+                              : "text-slate-300 bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20 hover:text-white"
+                          }
+                        `}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Fixed header'ın arkasında içerik kaybolmasın diye görünmez bir boşluk (spacer) bırakıyoruz. 
+        Ana `layout.tsx` dosyanızda başka bir boşluk ayarlaması varsa bunu kaldırabilirsiniz.
+      */}
+      <div className="h-20" />
+    </>
   );
 }
