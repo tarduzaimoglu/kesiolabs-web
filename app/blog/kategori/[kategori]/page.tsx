@@ -1,94 +1,155 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   getCategories,
   getPosts,
   getMediaUrl,
-  getCategorySlug,
   getCategoryTitle,
 } from "@/lib/strapi";
+import { ArrowUpRight, ArrowLeft, FolderOpen } from "lucide-react";
 
-type Props = {
-  params: Promise<{ kategori: string }> | { kategori: string };
-};
+// ANA BLOG SAYFASINDAKİ AYNI MODERN KART TASARIMI
+function FeaturedCard({
+  href,
+  title,
+  excerpt,
+  tag,
+  image,
+}: {
+  href: string;
+  title: string;
+  excerpt: string;
+  tag: string;
+  image: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group block w-full overflow-hidden rounded-3xl bg-white/[0.02] border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-500 hover:bg-white/[0.05] hover:border-indigo-500/30 hover:-translate-y-2"
+    >
+      <div className="relative h-[240px] md:h-[280px] w-full overflow-hidden bg-[#0b1120]">
+        <img
+          src={image}
+          alt={title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent opacity-90" />
+        <div className="absolute top-6 left-6 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider">
+          {tag}
+        </div>
+      </div>
 
-function formatTR(dateISO: string) {
-  return new Date(dateISO).toLocaleDateString("tr-TR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+      <div className="relative p-8 pt-6">
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="text-xl md:text-2xl font-bold text-white leading-snug group-hover:text-indigo-400 transition-colors">
+            {title}
+          </h3>
+          <div className="shrink-0 p-2 rounded-full bg-white/5 border border-white/10 group-hover:bg-indigo-500 group-hover:border-indigo-500 transition-all">
+            <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
+          </div>
+        </div>
+
+        <p className="mt-4 text-[15px] leading-relaxed text-slate-400 line-clamp-3">
+          {excerpt}
+        </p>
+      </div>
+    </Link>
+  );
 }
 
-export default async function BlogCategoryPage({ params }: Props) {
-  const resolvedParams = await params;
-  const slug = resolvedParams.kategori;
-
+// SAYFA RENDER FONKSİYONU
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  // Verileri paralel olarak çekiyoruz
   const [categories, posts] = await Promise.all([getCategories(), getPosts()]);
-  const category = categories.find((c) => c.slug === slug);
-  if (!category) notFound();
 
-  const filteredPosts = posts
-    .filter((p) => getCategorySlug(p.category) === category.slug)
+  // URL'den gelen slug'a göre mevcut kategoriyi bul
+  const currentCategory = categories.find((c) => c.slug === params.slug);
+
+  // Bu kategoriye ait olan postları filtrele ve tarihe göre sırala
+  const categoryPosts = posts
+    .filter((p) => {
+      const postCatSlug = p.category?.slug ?? p.category?.data?.attributes?.slug;
+      return postCatSlug === params.slug;
+    })
     .sort((a, b) => ((a.date ?? "") < (b.date ?? "") ? 1 : -1));
 
+  // Eğer URL yanlış yazılmışsa veya kategori yoksa 404/Boş durum göster
+  if (!currentCategory) {
+    return (
+      <main className="min-h-screen bg-[#0b1120] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-white mb-4">Kategori Bulunamadı</h1>
+          <Link href="/blog" className="text-indigo-400 hover:text-white transition-colors">
+            ← Blog'a Dön
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen w-full bg-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        <header className="mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-            {category.title}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-            {category.description ?? ""}
-          </p>
-        </header>
+    <main className="relative min-h-screen bg-[#0b1120] font-sans overflow-hidden">
+      {/* GENEL ARKA PLAN EFEKTLERİ */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0b1120]/80 to-[#0b1120] pointer-events-none" />
 
-        <section className="grid gap-8 md:grid-cols-2">
-          {filteredPosts.map((post) => {
-            const img = getMediaUrl(post.coverImage) ?? "/blog/covers/placeholder-1.jpg";
-            const catTitle = getCategoryTitle(post.category) ?? category.title;
+      {/* ÜST BÖLÜM: KATEGORİ BAŞLIĞI */}
+      <section className="relative z-10 pt-24 pb-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <Link 
+            href="/blog" 
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors mb-8 bg-white/5 px-4 py-2 rounded-full border border-white/10 w-fit"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Tüm Yazılara Dön
+          </Link>
 
-            return (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-              >
-                <div className="relative w-full overflow-hidden bg-slate-100">
-                  <div className="aspect-[16/9] w-full">
-                    <img
-                      src={img}
-                      alt={post.title}
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                      draggable={false}
-                    />
-                  </div>
-                </div>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+              <FolderOpen className="w-8 h-8 text-indigo-400" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
+              {currentCategory.title}
+            </h1>
+          </div>
+          
+          {currentCategory.description && (
+            <p className="text-lg text-slate-400 max-w-2xl mt-4 leading-relaxed">
+              {currentCategory.description}
+            </p>
+          )}
+        </div>
+      </section>
 
-                <div className="p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <time className="text-xs text-slate-500">
-                      {formatTR(post.date ?? "")}
-                    </time>
-                    <span className="text-xs font-medium text-blue-600">
-                      {catTitle}
-                    </span>
-                  </div>
+      {/* ALT BÖLÜM: KATEGORİ YAZILARI (GRID) */}
+      <section className="relative z-10 pb-24">
+        <div className="mx-auto max-w-7xl px-6">
+          {categoryPosts.length > 0 ? (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              {categoryPosts.map((p) => {
+                const tag = getCategoryTitle(p.category) ?? currentCategory.title;
+                const img = getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
-                  <h2 className="mt-3 text-base font-semibold text-slate-900 leading-snug">
-                    {post.title}
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {post.excerpt}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </section>
-      </div>
+                return (
+                  <FeaturedCard
+                    key={p.slug}
+                    href={`/blog/${p.slug}`}
+                    title={p.title}
+                    excerpt={p.excerpt ?? ""}
+                    tag={tag}
+                    image={img}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-20 text-center border border-white/10 bg-white/[0.02] rounded-3xl backdrop-blur-sm">
+              <h2 className="text-xl font-semibold text-slate-300">Bu kategoride henüz yazı bulunmuyor.</h2>
+              <p className="text-slate-500 mt-2">Çok yakında yeni içeriklerle karşınızda olacağız.</p>
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
