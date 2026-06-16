@@ -13,7 +13,7 @@ const navItems = [
   { label: "İletişim", href: "/contact" },
 ];
 
-const LOGO_CLASS = "h-9 w-auto brightness-200 contrast-125 object-contain"; // Logo koyu zeminde parlasın diye
+const LOGO_CLASS = "h-9 w-auto brightness-200 contrast-125 object-contain";
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const SCROLL_STEP = 260;
 const ARROW_COL = "w-[44px]";
@@ -103,7 +103,6 @@ export default function Header() {
   const [canRight, setCanRight] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Scroll durumunu algıla (Arka plan bulanıklığını artırmak için)
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -178,14 +177,11 @@ export default function Header() {
 
   return (
     <>
-      {/* Header fixed yapıldı, sayfa aşağı kaydırılsa bile üstte kalacak.
-        Arkasındaki içerik Header'ın altında kalmasın diye en dışa bir padding atadık (pt-20).
-      */}
       <header 
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 font-sans border-b
           ${isScrolled 
             ? "bg-[#0b1120]/90 backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] py-2" 
-            : "bg-[#0b1120]/60 backdrop-blur-md border-transparent py-4"}
+            : "bg-[#0b1120]/40 backdrop-blur-md border-transparent py-4"}
         `}
       >
         <div className="w-full px-4 md:px-6 max-w-[1600px] mx-auto">
@@ -287,7 +283,6 @@ export default function Header() {
           ].join(" ")}
           aria-hidden={!open}
         >
-          {/* Backdrop (Karanlık Arka Plan) */}
           <button
             aria-label="Menüyü kapat"
             onClick={() => setOpen(false)}
@@ -299,7 +294,6 @@ export default function Header() {
             ].join(" ")}
           />
 
-          {/* Sheet Panel (Buzlu Cam Panel) */}
           <div
             className={[
               "absolute right-0 top-0 h-full w-[85%] max-w-[380px]",
@@ -313,7 +307,6 @@ export default function Header() {
               paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
-            {/* Mobil Menü Header (LOGO BURAYA GELDİ) */}
             <div className="flex h-[88px] items-center justify-between px-6 border-b border-white/10 shrink-0">
               <Link href="/" onClick={() => setOpen(false)}>
                 <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
@@ -324,14 +317,12 @@ export default function Header() {
                 className="inline-flex items-center justify-center rounded-xl w-11 h-11 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                 onClick={() => setOpen(false)}
               >
-                {/* Çarpı İkonu */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
               </button>
             </div>
 
-            {/* Links (Mobil Menü Kartları) */}
             <nav className="px-6 py-8 overflow-y-auto flex-1">
               <ul className="flex flex-col gap-4">
                 {navItems.map((item, idx) => {
@@ -370,10 +361,13 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Fixed header'ın arkasında içerik kaybolmasın diye görünmez bir boşluk (spacer) bırakıyoruz. 
-        Ana `layout.tsx` dosyanızda başka bir boşluk ayarlaması varsa bunu kaldırabilirsiniz.
+      {/* 
+        ✅ İŞTE ÇÖZÜM BURASI: 
+        Eski koddaki şeffaf/beyaz kalan spacer'ı tamamen kaldırıp, 
+        yerine ana sayfanın koyu lacivert rengini (`bg-[#0b1120]`) verdik.
+        Böylece sayfa en tepedeyken bile cam menünün arkasından beyazlık sızamayacak!
       */}
-      <div className="h-20" />
+      <div className="h-20 bg-[#0b1120] w-full" />
     </>
   );
 }
