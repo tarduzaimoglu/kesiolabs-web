@@ -36,15 +36,7 @@ function ChevronRight({ className = "" }: { className?: string }) {
 
 function AnimatedBurger({ open }: { open: boolean }) {
   return (
-    <span
-      className={[
-        "relative block h-5 w-6",
-        "transition-transform duration-300",
-        EASE,
-        open ? "scale-[0.98]" : "scale-100",
-      ].join(" ")}
-      aria-hidden="true"
-    >
+    <span className="relative block h-5 w-6 transition-transform duration-300 scale-100" aria-hidden="true">
       <span
         className={[
           "absolute left-0 top-[2px] h-[2px] w-6 rounded-full bg-slate-200",
@@ -75,12 +67,9 @@ function AnimatedBurger({ open }: { open: boolean }) {
 
 function ArrowButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
   const commonClass = [
-    "h-9 w-9 rounded-full",
-    "flex items-center justify-center shrink-0",
-    "transition-all duration-300",
+    "h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
     EASE,
-    "border border-white/10 bg-[#0b1120] backdrop-blur-md",
-    "shadow-[0_0_15px_rgba(0,0,0,0.2)]",
+    "border border-white/10 bg-[#0b1120] backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.2)]",
     "hover:bg-white/10 hover:border-indigo-500/30",
     "active:scale-[0.95]",
   ].join(" ");
@@ -180,7 +169,7 @@ export default function Header() {
       <header 
         className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 font-sans border-b
           ${isScrolled 
-            ? "bg-[#0b1120]/90 backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] py-2" 
+            ? "bg-[#0b1120]/95 backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] py-2" 
             : "bg-[#0b1120]/40 backdrop-blur-md border-transparent py-4"}
         `}
       >
@@ -275,78 +264,74 @@ export default function Header() {
           </div>
         </div>
 
-        {/* --- MOBILE SHEET (SAĞDAN AÇILAN MENÜ) --- */}
+        {/* --- MOBILE SHEET (SAĞDAN AÇILAN MENÜ) --- 
+            Z-INDEX EN ÜSTE ALINDI (z-[100]) VE PORTAL MANTIĞINA GEÇİRİLDİ
+        */}
         <div
           className={[
-            "md:hidden fixed inset-0 z-[60]",
-            open ? "pointer-events-auto" : "pointer-events-none",
+            "md:hidden fixed inset-0 z-[100]",
+            open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none transition-all duration-300",
           ].join(" ")}
           aria-hidden={!open}
         >
-          <button
-            aria-label="Menüyü kapat"
+          {/* Arka Plan Koyu Karartma Katmanı */}
+          <div
             onClick={() => setOpen(false)}
             className={[
-              "absolute inset-0 bg-black/60 backdrop-blur-sm",
-              "transition-opacity duration-300",
-              EASE,
+              "absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300",
               open ? "opacity-100" : "opacity-0",
             ].join(" ")}
           />
 
+          {/* Sıkışmayı ve Kaymayı Önleyen Tam Ekran Sabit Panel */}
           <div
             className={[
-              "absolute right-0 top-0 h-full w-[85%] max-w-[380px]",
-              "bg-[#0b1120]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl",
-              "transform-gpu transition-all duration-300 flex flex-col",
+              "absolute right-0 top-0 h-full w-[85%] max-w-[360px] bg-[#0b1120] border-l border-white/10 flex flex-col shadow-2xl",
+              "transform-gpu transition-transform duration-300",
               EASE,
-              open ? "translate-x-0 opacity-100 shadow-[-20px_0_40px_rgba(0,0,0,0.5)]" : "translate-x-full opacity-0",
+              open ? "translate-x-0" : "translate-x-full",
             ].join(" ")}
-            style={{
-              paddingTop: "env(safe-area-inset-top)",
-              paddingBottom: "env(safe-area-inset-bottom)",
-            }}
           >
-            <div className="flex h-[88px] items-center justify-between px-6 border-b border-white/10 shrink-0">
-              <Link href="/" onClick={() => setOpen(false)}>
+            {/* Mobil Menü Üst Kısmı (Logo + Kapat Butonu) */}
+            <div className="flex h-20 items-center justify-between px-6 border-b border-white/10 shrink-0">
+              <Link href="/" onClick={() => setOpen(false)} className="inline-flex">
                 <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
               </Link>
               <button
                 type="button"
                 aria-label="Menüyü kapat"
-                className="inline-flex items-center justify-center rounded-xl w-11 h-11 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl w-10 h-10 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 transition-colors"
                 onClick={() => setOpen(false)}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300">
+                <svg width="20" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
               </button>
             </div>
 
-            <nav className="px-6 py-8 overflow-y-auto flex-1">
-              <ul className="flex flex-col gap-4">
+            {/* Menü Link Listesi */}
+            <nav className="px-6 py-6 overflow-y-auto flex-1">
+              <ul className="flex flex-col gap-3">
                 {navItems.map((item, idx) => {
                   const isActive = activePath === item.href;
                   return (
                     <li
                       key={item.href}
-                      className={[
-                        "transform-gpu transition-all duration-500",
-                        EASE,
-                        open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
-                      ].join(" ")}
-                      style={{ transitionDelay: open ? `${100 + idx * 60}ms` : "0ms" }}
+                      className="transform-gpu transition-all duration-300"
+                      style={{ 
+                        transitionProperty: "opacity, transform",
+                        transitionDelay: open ? `${80 + idx * 40}ms` : "0ms" 
+                      }}
                     >
                       <Link
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={`
-                          block w-full rounded-2xl px-5 py-4
-                          text-[16px] font-semibold transition-all duration-300
-                          border backdrop-blur-md
+                          block w-full rounded-2xl px-5 py-3.5
+                          text-[15px] font-bold transition-all duration-300 border
                           ${isActive
-                              ? "text-indigo-300 bg-indigo-500/10 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
-                              : "text-slate-300 bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20 hover:text-white"
+                              ? "text-indigo-400 bg-indigo-500/10 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+                              : "text-slate-300 bg-white/[0.01] border-white/5 hover:bg-white/[0.04] hover:border-white/10 hover:text-white"
                           }
                         `}
                       >
@@ -361,12 +346,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 
-        ✅ İŞTE ÇÖZÜM BURASI: 
-        Eski koddaki şeffaf/beyaz kalan spacer'ı tamamen kaldırıp, 
-        yerine ana sayfanın koyu lacivert rengini (`bg-[#0b1120]`) verdik.
-        Böylece sayfa en tepedeyken bile cam menünün arkasından beyazlık sızamayacak!
-      */}
+      {/* Arka plan dolgu boşluğu */}
       <div className="h-20 bg-[#0b1120] w-full" />
     </>
   );
