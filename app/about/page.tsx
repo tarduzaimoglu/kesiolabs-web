@@ -1,6 +1,6 @@
 // app/about/page.tsx
 import Image from "next/image";
-import { Cpu, Target, Users } from "lucide-react"; // Yeni tasarımdaki şık ikonlar
+import { Cpu, Target, Users } from "lucide-react";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN || "";
@@ -12,7 +12,7 @@ type NormalizedMedia = {
   height?: number | null;
 };
 
-// --- VERİ DÜZENLEME FONKSİYONLARI (DOKUNULMADI) ---
+// --- VERİ DÜZENLEME FONKSİYONLARI ---
 function normalizeMedia(input: any): NormalizedMedia | null {
   if (!input) return null;
   if (typeof input?.url === "string") return { url: input.url, alternativeText: input.alternativeText ?? null, width: input.width ?? null, height: input.height ?? null };
@@ -71,7 +71,7 @@ type AboutPageData = {
   body1?: any;
 };
 
-// --- FETCH FONKSİYONLARI (DOKUNULMADI) ---
+// --- FETCH FONKSİYONLARI ---
 async function fetchJson(url: string) {
   const res = await fetch(url, {
     headers: { ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}) },
@@ -125,14 +125,12 @@ export default async function AboutPage() {
       
       {/* 1. KAHRAMAN BÖLÜMÜ (HERO) */}
       <section className="relative w-full h-[65vh] min-h-[500px] flex flex-col justify-center items-center px-6 overflow-hidden">
-        {/* Arka Plan Görseli & Karanlık Geçiş (Gradient Overlay) */}
         <div className="absolute inset-0 z-0">
           {heroDUrl && <Image src={heroDUrl} alt="Hero Desktop" fill className="object-cover hidden md:block" priority unoptimized />}
           {heroMUrl && <Image src={heroMUrl} alt="Hero Mobile" fill className="object-cover md:hidden" priority unoptimized />}
           <div className="absolute inset-0 bg-gradient-to-b from-[#0b1120]/60 via-[#0b1120]/80 to-[#0b1120]" />
         </div>
 
-        {/* Başlık ve İlk Paragraf */}
         <div className="relative z-10 max-w-4xl mx-auto text-center mt-16">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight drop-shadow-md">
             {a.title || "Hakkımızda"}
@@ -168,7 +166,6 @@ export default async function AboutPage() {
           <div className="absolute inset-0 z-0">
             {midDUrl && <Image src={midDUrl} alt="Mid Desktop" fill className="object-cover hidden md:block" unoptimized />}
             {midMUrl && <Image src={midMUrl} alt="Mid Mobile" fill className="object-cover md:hidden" unoptimized />}
-            {/* Görseli temanın rengine uyarlayan mavi karartma */}
             <div className="absolute inset-0 bg-[#0b1120]/70 mix-blend-multiply" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-[#0b1120]" />
           </div>
@@ -181,7 +178,6 @@ export default async function AboutPage() {
 
       {/* 4. VİZYON VE YAKLAŞIM BÖLÜMÜ */}
       <section className="max-w-4xl mx-auto px-6 mb-32 relative">
-        {/* Arka plan ışık efekti */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
         
         <div className="relative z-10 flex flex-col gap-10">
@@ -205,7 +201,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-{/* 5. EKİBİMİZ */}
+      {/* 5. EKİBİMİZ */}
       {team.length > 0 && (
         <section className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col items-center justify-center mb-16 text-center">
@@ -238,11 +234,10 @@ export default async function AboutPage() {
                         Fotoğraf Yok
                       </div>
                     )}
-                    {/* Resim altına hafif karartma (artık yazılar burada değil, sadece estetik için) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120]/60 via-transparent to-transparent opacity-80" />
                   </div>
 
-                  {/* İsim ve Unvan (DÜZELTİLEN KISIM: -mt-8 kaldırıldı, p-6 korundu) */}
+                  {/* İsim ve Unvan */}
                   <div className="p-6 pt-5">
                     <h3 className="text-xl font-bold text-white">{m.name || "-"}</h3>
                     <p className="text-sm font-medium text-indigo-400 mt-1">
@@ -260,3 +255,7 @@ export default async function AboutPage() {
           </div>
         </section>
       )}
+
+    </main>
+  );
+}
