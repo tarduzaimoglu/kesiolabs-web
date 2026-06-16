@@ -9,11 +9,13 @@ import {
 } from "@/lib/strapi";
 import { StrapiBlocks } from "@/components/StrapiBlocks";
 import sanitizeHtml from "sanitize-html";
+import { ChevronRight, Calendar, ArrowLeft } from "lucide-react";
 
 type Props = {
   params: Promise<{ slug: string }> | { slug: string };
 };
 
+// --- YARDIMCI FONKSİYONLAR (DOKUNULMADI) ---
 function formatTR(dateISO: string) {
   return new Date(dateISO).toLocaleDateString("tr-TR", {
     day: "2-digit",
@@ -51,15 +53,6 @@ function isProbablyHtml(s: string) {
   return /^\s*</.test(s);
 }
 
-/**
- * Mini-Markdown -> HTML
- * - Başlıklar: #, ##, ### ... (satır başında)
- * - Bold: **text**
- * - Italic: _text_ veya *text*
- * - Strike: ~~text~~
- * - Satır sonları: \n -> <br/>
- * - Indent/boşluklar: white-space pre-wrap ile korunacak
- */
 function miniMarkdownToHtml(input: string) {
   const esc = (str: string) =>
     str
@@ -68,26 +61,22 @@ function miniMarkdownToHtml(input: string) {
       .replaceAll(">", "&gt;");
 
   const lines = input.replace(/\r\n/g, "\n").split("\n");
-
   const out: string[] = [];
 
   for (const rawLine of lines) {
-    const line = rawLine; // indent'i korumak istiyoruz
+    const line = rawLine;
     const trimmed = line.trim();
 
-    // boş satır
     if (!trimmed) {
       out.push(`<br/>`);
       continue;
     }
 
-    // headings (satır başında # ile)
     const m = trimmed.match(/^(#{1,6})\s+(.+)$/);
     if (m) {
       const level = m[1].length;
       let text = esc(m[2]);
 
-      // inline formatlar
       text = text
         .replace(/~~(.+?)~~/g, "<del>$1</del>")
         .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -98,7 +87,6 @@ function miniMarkdownToHtml(input: string) {
       continue;
     }
 
-    // normal satır (indent dahil)
     let text = esc(line);
 
     text = text
@@ -106,7 +94,6 @@ function miniMarkdownToHtml(input: string) {
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/(^|[^*])\*(?!\s)(.+?)(?<!\s)\*(?!\*)/g, "$1<em>$2</em>")
       .replace(/(^|[^_])_(?!\s)(.+?)(?<!\s)_(?!_)/g, "$1<em>$2</em>")
-      // underline için basit destek (sen <u> yazıyorsun): &lt;u&gt; metni kalmasın diye gerçek u yapalım
       .replace(/&lt;u&gt;(.+?)&lt;\/u&gt;/g, "<u>$1</u>");
 
     out.push(`<div>${text}</div>`);
@@ -118,32 +105,9 @@ function miniMarkdownToHtml(input: string) {
 function sanitizeRichHtml(html: string) {
   return sanitizeHtml(html, {
     allowedTags: [
-      "p",
-      "br",
-      "strong",
-      "b",
-      "em",
-      "i",
-      "u",
-      "s",
-      "del",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "ul",
-      "ol",
-      "li",
-      "blockquote",
-      "a",
-      "code",
-      "pre",
-      "hr",
-      "img",
-      "span",
-      "div",
+      "p", "br", "strong", "b", "em", "i", "u", "s", "del",
+      "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li",
+      "blockquote", "a", "code", "pre", "hr", "img", "span", "div",
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
@@ -151,12 +115,8 @@ function sanitizeRichHtml(html: string) {
       span: ["style"],
       div: ["style"],
       p: ["style"],
-      h1: ["style"],
-      h2: ["style"],
-      h3: ["style"],
-      h4: ["style"],
-      h5: ["style"],
-      h6: ["style"],
+      h1: ["style"], h2: ["style"], h3: ["style"],
+      h4: ["style"], h5: ["style"], h6: ["style"],
     },
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", {
@@ -167,6 +127,7 @@ function sanitizeRichHtml(html: string) {
   });
 }
 
+// --- SAYFA RENDER FONKSİYONU ---
 export default async function BlogDetailPage({ params }: Props) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
@@ -176,13 +137,10 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const categorySlug = getCategorySlug(post.category) ?? "";
   const categoryTitle = getCategoryTitle(post.category) ?? "";
-
   const allPosts = await getPosts();
 
   const sameCategory = allPosts
-    .filter(
-      (p) => p.slug !== post.slug && getCategorySlug(p.category) === categorySlug
-    )
+    .filter((p) => p.slug !== post.slug && getCategorySlug(p.category) === categorySlug)
     .sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : -1));
 
   const fallback = allPosts
@@ -190,101 +148,82 @@ export default async function BlogDetailPage({ params }: Props) {
     .sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : -1));
 
   const related = uniqueBySlug([...sameCategory, ...fallback]).slice(0, 3);
-
   const blocks = normalizeBlocks((post as any).contentBlocks);
 
-  const richTextRaw =
-    typeof (post as any).contentBlocks === "string"
-      ? ((post as any).contentBlocks as string)
-      : "";
-
-  // HTML geliyorsa direkt sanitize+render
-  // HTML değilse (senin yazdığın gibi #, ** vs) mini-markdown -> HTML çevir
-  const richTextPrepared = richTextRaw
-    ? isProbablyHtml(richTextRaw)
-      ? richTextRaw
-      : miniMarkdownToHtml(richTextRaw)
-    : "";
-
+  const richTextRaw = typeof (post as any).contentBlocks === "string" ? ((post as any).contentBlocks as string) : "";
+  const richTextPrepared = richTextRaw ? (isProbablyHtml(richTextRaw) ? richTextRaw : miniMarkdownToHtml(richTextRaw)) : "";
   const safeHtml = richTextPrepared ? sanitizeRichHtml(richTextPrepared) : "";
 
-  // ✅ kesinlikle string[] olsun (TS any hataları burada bitiyor)
   const fallbackParagraphs: string[] = String((post as any).contentBlocks ?? "")
     .split("\n\n")
     .map((t: string) => t.trim())
     .filter(Boolean);
 
-  const heroImg =
-    getMediaUrl(post.coverImage) ?? "/blog/covers/placeholder-1.jpg";
+  const heroImg = getMediaUrl(post.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
   return (
-    <main className="min-h-screen w-full bg-white">
-      <article className="mx-auto w-full max-w-3xl px-6 py-10">
-        <nav className="text-[11px] text-slate-500">
-          <Link href="/" className="hover:underline">
-            Home
-          </Link>
-          <span className="px-1">/</span>
-          <Link href="/blog" className="hover:underline">
-            Blog
-          </Link>
-
-          {categorySlug ? (
-            <>
-              <span className="px-1">/</span>
-              <Link
-                href={`/blog/kategori/${categorySlug}`}
-                className="hover:underline"
-              >
-                {categoryTitle || categorySlug}
-              </Link>
-            </>
-          ) : null}
-        </nav>
-
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
-          {post.title}
-        </h1>
-
-        <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
-          <time>{post.date ? formatTR(post.date) : ""}</time>
-          {categorySlug ? <span>•</span> : null}
-          {categorySlug ? (
-            <Link
-              href={`/blog/kategori/${categorySlug}`}
-              className="text-blue-600 hover:underline"
-            >
-              {categoryTitle || categorySlug}
-            </Link>
-          ) : null}
+    <main className="min-h-screen w-full bg-[#0b1120] font-sans selection:bg-indigo-500/30">
+      
+      {/* SİNEMATİK KAPAK (HERO) ALANI */}
+      <div className="relative w-full h-[55vh] min-h-[450px] max-h-[600px] flex items-end">
+        {/* Arka Plan Görseli */}
+        <div className="absolute inset-0 z-0">
+          <img src={heroImg} alt={post.title} className="w-full h-full object-cover" draggable={false} />
+          {/* Yazıların okunmasını sağlayan ve aşağıya eriyen Karanlık Geçiş */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/60 to-transparent" />
+          <div className="absolute inset-0 bg-indigo-500/10 mix-blend-overlay" />
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-tl-[192px] rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px] bg-slate-100">
-          <div className="aspect-[16/9] w-full">
-            <img
-              src={heroImg}
-              alt={post.title}
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
+        {/* Başlık ve Meta Bilgileri */}
+        <div className="relative z-10 w-full mx-auto max-w-4xl px-6 pb-12">
+          {/* Breadcrumb (Ekmek Kırıntısı) Navigasyon */}
+          <nav className="flex items-center gap-2 text-[13px] font-medium text-slate-400 mb-6 backdrop-blur-sm bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+            {categorySlug && (
+              <>
+                <ChevronRight className="w-3 h-3" />
+                <Link href={`/blog/kategori/${categorySlug}`} className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  {categoryTitle || categorySlug}
+                </Link>
+              </>
+            )}
+          </nav>
+
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-tight drop-shadow-md">
+            {post.title}
+          </h1>
+
+          <div className="mt-6 flex items-center gap-4 text-sm font-medium text-slate-300">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              <time>{post.date ? formatTR(post.date) : ""}</time>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
+      {/* İÇERİK (OKUMA) ALANI */}
+      <article className="mx-auto w-full max-w-3xl px-6 py-12 md:py-16">
         <section
           className="
-            mt-6 max-w-none break-words [overflow-wrap:anywhere]
-            prose prose-slate
-            [&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:mt-6 [&_h1]:mb-3
-            [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3
-            [&_h3]:text-xl  [&_h3]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2
-            [&_h4]:text-lg  [&_h4]:font-semibold [&_h4]:mt-4 [&_h4]:mb-2
-            [&_p]:text-[13px] [&_p]:leading-7
-            [&_ul]:my-4 [&_ol]:my-4
+            max-w-none break-words [overflow-wrap:anywhere]
+            prose prose-invert prose-slate
+            [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:mt-12 [&_h1]:mb-6
+            [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-4
+            [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-slate-200 [&_h3]:mt-8 [&_h3]:mb-4
+            [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:text-slate-200 [&_h4]:mt-6 [&_h4]:mb-3
+            [&_p]:text-[16px] md:[&_p]:text-[17px] [&_p]:leading-[1.8] [&_p]:text-slate-300 [&_p]:mb-6
+            [&_a]:text-indigo-400 [&_a]:underline hover:[&_a]:text-indigo-300 [&_a]:transition-colors
+            [&_ul]:my-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_li]:text-slate-300
+            [&_ol]:my-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_li]:text-slate-300
+            [&_strong]:text-white [&_strong]:font-semibold
+            [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-500 [&_blockquote]:pl-6 [&_blockquote]:italic [&_blockquote]:text-slate-400 [&_blockquote]:bg-white/[0.02] [&_blockquote]:py-2 [&_blockquote]:rounded-r-lg
+            [&_img]:rounded-2xl [&_img]:border [&_img]:border-white/10 [&_img]:shadow-xl
           "
         >
           {safeHtml ? (
-            // ✅ boşluk/indent ve satır sonlarını koru
             <div
               style={{ whiteSpace: "pre-wrap" }}
               dangerouslySetInnerHTML={{ __html: safeHtml }}
@@ -294,54 +233,66 @@ export default async function BlogDetailPage({ params }: Props) {
           ) : fallbackParagraphs.length ? (
             <>
               {fallbackParagraphs.map((p: string, i: number) => (
-                <p
-                  key={i}
-                  className="text-[13px] leading-7 text-slate-700 mt-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-                >
+                <p key={i} className="whitespace-pre-wrap">
                   {p}
                 </p>
               ))}
             </>
           ) : (
-            <p className="text-[13px] leading-7 text-slate-700 mt-4">
-              (Bu yazının içeriği yakında eklenecek.)
+            <p className="italic text-slate-500 border border-white/10 p-6 rounded-xl bg-white/[0.02] text-center">
+              Bu yazının içeriği yakında eklenecek.
             </p>
           )}
         </section>
 
-        <div className="mt-10 h-px w-full bg-blue-200" />
+        {/* YAZI BİTİŞİ & GÜZEL AYIRICI BANT */}
+        <div className="mt-16 flex items-center justify-center gap-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+          <div className="w-2 h-2 rounded-full bg-indigo-500/50" />
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+        </div>
 
-        <section className="mt-6">
-          <h3 className="text-sm font-semibold text-slate-900">Daha Fazlası</h3>
+        {/* İLGİNİZİ ÇEKEBİLİR (Daha Fazlası) BÖLÜMÜ */}
+        <section className="mt-16 pb-12">
+          <h3 className="text-2xl font-bold text-white mb-8">İlginizi Çekebilir</h3>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {related.map((p) => {
-              const img =
-                getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
+              const img = getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
               return (
                 <Link
                   key={p.slug}
                   href={`/blog/${p.slug}`}
-                  className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition"
+                  className="group flex flex-col overflow-hidden rounded-2xl bg-white/[0.02] border border-white/10 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.05] hover:-translate-y-1 hover:border-indigo-500/30"
                 >
-                  <div className="aspect-[16/10] w-full bg-slate-100 overflow-hidden">
+                  <div className="aspect-[16/10] w-full overflow-hidden bg-black/20">
                     <img
                       src={img}
                       alt={p.title}
-                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                       draggable={false}
                     />
                   </div>
 
-                  <div className="p-3">
-                    <h4 className="text-[12px] font-semibold leading-snug text-slate-900 line-clamp-2">
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <h4 className="text-[14px] font-semibold leading-relaxed text-slate-200 line-clamp-3 group-hover:text-indigo-400 transition-colors">
                       {p.title}
                     </h4>
                   </div>
                 </Link>
               );
             })}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link 
+              href="/blog" 
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-6 py-3 rounded-full border border-white/10"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Tüm Yazılara Dön
+            </Link>
           </div>
         </section>
       </article>
