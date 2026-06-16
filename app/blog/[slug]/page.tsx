@@ -114,7 +114,7 @@ function sanitizeRichHtml(html: string) {
       img: ["src", "alt", "title", "width", "height"],
       span: ["style"],
       div: ["style"],
-      p: ["style"],
+      p: ["style", "class"], // p etiketine class ekleme izni
       h1: ["style"], h2: ["style"], h3: ["style"],
       h4: ["style"], h5: ["style"], h6: ["style"],
     },
@@ -164,57 +164,50 @@ export default async function BlogDetailPage({ params }: Props) {
   return (
     <main className="min-h-screen w-full bg-[#0b1120] font-sans selection:bg-indigo-500/30">
       
-      {/* SİNEMATİK KAPAK (HERO) ALANI */}
-      <div className="relative w-full h-[55vh] min-h-[450px] max-h-[600px] flex items-end">
-        {/* Arka Plan Görseli */}
-        <div className="absolute inset-0 z-0">
-          <img src={heroImg} alt={post.title} className="w-full h-full object-cover" draggable={false} />
-          {/* Yazıların okunmasını sağlayan ve aşağıya eriyen Karanlık Geçiş */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/60 to-transparent" />
-          <div className="absolute inset-0 bg-indigo-500/10 mix-blend-overlay" />
-        </div>
+      <article className="mx-auto w-full max-w-4xl px-4 sm:px-6 py-8 md:py-12">
+        {/* BREADCRUMB */}
+        <nav className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-400 mb-6 w-fit px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10 bg-white/5">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <ChevronRight className="w-3 h-3" />
+          <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+          {categorySlug && (
+            <>
+              <ChevronRight className="w-3 h-3" />
+              <Link href={`/blog/kategori/${categorySlug}`} className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                {categoryTitle || categorySlug}
+              </Link>
+            </>
+          )}
+        </nav>
 
-        {/* Başlık ve Meta Bilgileri */}
-        <div className="relative z-10 w-full mx-auto max-w-4xl px-6 pb-12">
-          {/* Breadcrumb (Ekmek Kırıntısı) Navigasyon */}
-          <nav className="flex items-center gap-2 text-[13px] font-medium text-slate-400 mb-6 backdrop-blur-sm bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
-            {categorySlug && (
-              <>
-                <ChevronRight className="w-3 h-3" />
-                <Link href={`/blog/kategori/${categorySlug}`} className="text-indigo-400 hover:text-indigo-300 transition-colors">
-                  {categoryTitle || categorySlug}
-                </Link>
-              </>
-            )}
-          </nav>
-
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-tight drop-shadow-md">
+        {/* BAŞLIK VE TARİH */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
             {post.title}
           </h1>
-
-          <div className="mt-6 flex items-center gap-4 text-sm font-medium text-slate-300">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-indigo-400" />
-              <time>{post.date ? formatTR(post.date) : ""}</time>
-            </div>
+          <div className="mt-4 flex items-center gap-2 text-sm font-medium text-indigo-400">
+            <Calendar className="w-4 h-4" />
+            <time>{post.date ? formatTR(post.date) : ""}</time>
           </div>
         </div>
-      </div>
 
-      {/* İÇERİK (OKUMA) ALANI */}
-      <article className="mx-auto w-full max-w-3xl px-6 py-12 md:py-16">
+        {/* KAPAK GÖRSELİ (Başlıktan ayrı, temiz bir şekilde) */}
+        <div className="w-full aspect-video md:aspect-[21/9] bg-black/20 rounded-2xl sm:rounded-3xl overflow-hidden mb-12 border border-white/10 shadow-2xl relative">
+            <img src={heroImg} alt={post.title} className="w-full h-full object-cover" draggable={false} />
+            {/* Hafif bir ışık efekti */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120]/40 to-transparent pointer-events-none" />
+        </div>
+
+        {/* İÇERİK (OKUMA) ALANI */}
         <section
           className="
             max-w-none break-words [overflow-wrap:anywhere]
             prose prose-invert prose-slate
-            [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:mt-12 [&_h1]:mb-6
-            [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-10 [&_h2]:mb-4
-            [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-slate-200 [&_h3]:mt-8 [&_h3]:mb-4
-            [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:text-slate-200 [&_h4]:mt-6 [&_h4]:mb-3
-            [&_p]:text-[16px] md:[&_p]:text-[17px] [&_p]:leading-[1.8] [&_p]:text-slate-300 [&_p]:mb-6
+            [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:mt-10 [&_h1]:mb-5
+            [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-4
+            [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-slate-200 [&_h3]:mt-6 [&_h3]:mb-3
+            [&_p]:text-[15px] sm:[&_p]:text-[17px] [&_p]:leading-relaxed [&_p]:text-slate-300 [&_p]:mb-6
+            [&_div]:text-[15px] sm:[&_div]:text-[17px] [&_div]:leading-relaxed [&_div]:text-slate-300 [&_div]:mb-6
             [&_a]:text-indigo-400 [&_a]:underline hover:[&_a]:text-indigo-300 [&_a]:transition-colors
             [&_ul]:my-6 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mb-2 [&_li]:text-slate-300
             [&_ol]:my-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_li]:text-slate-300
@@ -233,7 +226,7 @@ export default async function BlogDetailPage({ params }: Props) {
           ) : fallbackParagraphs.length ? (
             <>
               {fallbackParagraphs.map((p: string, i: number) => (
-                <p key={i} className="whitespace-pre-wrap">
+                <p key={i} className="whitespace-pre-wrap text-slate-300">
                   {p}
                 </p>
               ))}
@@ -246,17 +239,17 @@ export default async function BlogDetailPage({ params }: Props) {
         </section>
 
         {/* YAZI BİTİŞİ & GÜZEL AYIRICI BANT */}
-        <div className="mt-16 flex items-center justify-center gap-4">
+        <div className="mt-16 mb-12 flex items-center justify-center gap-4">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
           <div className="w-2 h-2 rounded-full bg-indigo-500/50" />
           <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
         </div>
 
         {/* İLGİNİZİ ÇEKEBİLİR (Daha Fazlası) BÖLÜMÜ */}
-        <section className="mt-16 pb-12">
-          <h3 className="text-2xl font-bold text-white mb-8">İlginizi Çekebilir</h3>
+        <section className="pb-12">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">İlginizi Çekebilir</h3>
 
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 md:grid-cols-3">
             {related.map((p) => {
               const img = getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
@@ -275,8 +268,8 @@ export default async function BlogDetailPage({ params }: Props) {
                     />
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <h4 className="text-[14px] font-semibold leading-relaxed text-slate-200 line-clamp-3 group-hover:text-indigo-400 transition-colors">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                    <h4 className="text-[13px] sm:text-[14px] font-semibold leading-relaxed text-slate-200 line-clamp-3 group-hover:text-indigo-400 transition-colors">
                       {p.title}
                     </h4>
                   </div>
@@ -285,10 +278,10 @@ export default async function BlogDetailPage({ params }: Props) {
             })}
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="mt-10 sm:mt-12 text-center">
             <Link 
               href="/blog" 
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-6 py-3 rounded-full border border-white/10"
+              className="inline-flex items-center gap-2 text-[13px] sm:text-sm font-medium text-slate-300 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full border border-white/10"
             >
               <ArrowLeft className="w-4 h-4" />
               Tüm Yazılara Dön
