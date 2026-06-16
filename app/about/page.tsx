@@ -205,7 +205,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* 5. EKİBİMİZ */}
+{/* 5. EKİBİMİZ */}
       {team.length > 0 && (
         <section className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col items-center justify-center mb-16 text-center">
@@ -224,7 +224,7 @@ export default async function AboutPage() {
               return (
                 <div key={m.id ?? idx} className="group bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm hover:bg-white/[0.05] transition-all duration-300">
                   {/* Fotoğraf Alanı */}
-                  <div className="relative w-full aspect-[4/5] bg-black/20 overflow-hidden">
+                  <div className="relative w-full aspect-[4/5] bg-black/20 overflow-hidden border-b border-white/5">
                     {photoUrl ? (
                       <Image
                         src={photoUrl}
@@ -238,12 +238,12 @@ export default async function AboutPage() {
                         Fotoğraf Yok
                       </div>
                     )}
-                    {/* Resim altına yumuşak geçiş gölgesi */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent opacity-80" />
+                    {/* Resim altına hafif karartma (artık yazılar burada değil, sadece estetik için) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120]/60 via-transparent to-transparent opacity-80" />
                   </div>
 
-                  {/* İsim ve Unvan */}
-                  <div className="relative p-6 -mt-8">
+                  {/* İsim ve Unvan (DÜZELTİLEN KISIM: -mt-8 kaldırıldı, p-6 korundu) */}
+                  <div className="p-6 pt-5">
                     <h3 className="text-xl font-bold text-white">{m.name || "-"}</h3>
                     <p className="text-sm font-medium text-indigo-400 mt-1">
                       {m.role || m.title || ""}
@@ -260,7 +260,3 @@ export default async function AboutPage() {
           </div>
         </section>
       )}
-
-    </main>
-  );
-}
