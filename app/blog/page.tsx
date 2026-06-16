@@ -1,10 +1,12 @@
 import Link from "next/link";
+import Image from "next/image"; // Next.js Image optimizasyonu için eklendi
 import {
   getCategories,
   getPosts,
   getMediaUrl,
   getCategoryTitle,
 } from "@/lib/strapi";
+import { ArrowUpRight, FolderOpen } from "lucide-react"; // UI için modern ikonlar
 
 function FeaturedCard({
   href,
@@ -22,30 +24,36 @@ function FeaturedCard({
   return (
     <Link
       href={href}
-      className="
-        group block w-full max-w-[686px] overflow-hidden
-        rounded-[5px] md:rounded-[9px]
-        bg-white shadow-[0_30px_90px_rgba(0,0,0,0.35)]
-      "
+      className="group block w-full overflow-hidden rounded-3xl bg-white/[0.02] border border-white/10 shadow-2xl backdrop-blur-md transition-all duration-500 hover:bg-white/[0.05] hover:border-indigo-500/30 hover:-translate-y-2"
     >
-      <div className="h-[398px] w-full overflow-hidden rounded-t-[5px] md:rounded-t-[9px] bg-slate-200">
+      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden bg-[#0b1120]">
         <img
           src={image}
           alt={title}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           draggable={false}
         />
+        {/* Görsel üzerine şık bir karartma ve Kategori Tag'i */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent opacity-90" />
+        <div className="absolute top-6 left-6 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider">
+          {tag}
+        </div>
       </div>
 
-      <div className="h-[257px] w-full rounded-b-[5px] md:rounded-b-[9px] bg-white px-8 py-7">
-        <div className="flex items-start justify-between gap-6">
-          <h3 className="text-[18px] font-semibold text-slate-900 leading-snug">
+      <div className="relative p-8 pt-6">
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="text-xl md:text-2xl font-bold text-white leading-snug group-hover:text-indigo-400 transition-colors">
             {title}
           </h3>
-          <span className="text-[12px] font-medium text-blue-600">{tag}</span>
+          {/* Modern Ok İkonu */}
+          <div className="shrink-0 p-2 rounded-full bg-white/5 border border-white/10 group-hover:bg-indigo-500 group-hover:border-indigo-500 transition-all">
+            <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
+          </div>
         </div>
 
-        <p className="mt-4 text-[14px] leading-6 text-slate-700">{excerpt}</p>
+        <p className="mt-4 text-[15px] leading-relaxed text-slate-400 line-clamp-3">
+          {excerpt}
+        </p>
       </div>
     </Link>
   );
@@ -65,30 +73,24 @@ function CategoryCard({
   return (
     <Link
       href={href}
-      className="
-        block w-full max-w-[686px] overflow-hidden
-        rounded-[5px] md:rounded-[9px]
-        bg-white shadow-[0_20px_70px_rgba(0,0,0,0.18)]
-      "
+      className="group block w-full overflow-hidden rounded-3xl bg-[#0b1120] border border-white/10 shadow-xl transition-all duration-500 hover:border-indigo-500/30 hover:shadow-indigo-500/10"
     >
-      <div className="grid grid-cols-2">
-        <div className="h-[199px] w-full overflow-hidden bg-slate-200 rounded-tl-[5px] md:rounded-tl-[9px]">
-          <img src={images[0]} alt="" className="h-full w-full object-cover" />
-        </div>
-        <div className="h-[199px] w-full overflow-hidden bg-slate-200 rounded-tr-[5px] md:rounded-tr-[9px]">
-          <img src={images[1]} alt="" className="h-full w-full object-cover" />
-        </div>
-        <div className="h-[199px] w-full overflow-hidden bg-slate-200">
-          <img src={images[2]} alt="" className="h-full w-full object-cover" />
-        </div>
-        <div className="h-[199px] w-full overflow-hidden bg-slate-200">
-          <img src={images[3]} alt="" className="h-full w-full object-cover" />
-        </div>
+      <div className="grid grid-cols-2 gap-1 p-2 bg-white/[0.02]">
+        {/* 4'lü Görsel Grid (Kategori İçeriğini Yansıtır) */}
+        {images.map((img, i) => (
+          <div key={i} className={`relative h-[120px] md:h-[150px] w-full overflow-hidden ${i === 0 ? 'rounded-tl-2xl' : ''} ${i === 1 ? 'rounded-tr-2xl' : ''}`}>
+            <img src={img} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-indigo-500/10 mix-blend-overlay group-hover:bg-transparent transition-colors" />
+          </div>
+        ))}
       </div>
 
-      <div className="px-8 py-7">
-        <h4 className="text-[18px] font-semibold text-slate-900">{title}</h4>
-        <p className="mt-3 text-[14px] leading-6 text-slate-700">{desc}</p>
+      <div className="p-8">
+        <div className="flex items-center gap-3 mb-3">
+          <FolderOpen className="w-5 h-5 text-indigo-400" />
+          <h4 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">{title}</h4>
+        </div>
+        <p className="text-[14px] leading-relaxed text-slate-400 line-clamp-2">{desc}</p>
       </div>
     </Link>
   );
@@ -97,30 +99,33 @@ function CategoryCard({
 export default async function BlogPage() {
   const [categories, posts] = await Promise.all([getCategories(), getPosts()]);
 
-  // ✅ burada ; yok — zincir devam ediyor
   const featured = [...posts]
     .sort((a, b) => ((a.date ?? "") < (b.date ?? "") ? 1 : -1))
     .slice(0, 2);
 
   return (
-    <main className="relative isolate min-h-screen">
-      <div className="absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/blog-bg.png')" }}
-        />
-        <div className="absolute inset-0 bg-black/20" />
-      </div>
+    <main className="relative min-h-screen bg-[#0b1120] font-sans overflow-hidden">
+      {/* GENEL ARKA PLAN EFEKTLERİ */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-[url('/blog-bg.png')] bg-cover bg-center opacity-10 mix-blend-screen pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0b1120]/80 to-[#0b1120] pointer-events-none" />
 
-      <section className="relative">
-        <div className="mx-auto max-w-7xl px-6 pt-14 pb-24">
-          <h1 className="text-3xl font-semibold text-white">BlogLabs</h1>
+      {/* ÜST BÖLÜM: ÖNE ÇIKAN YAZILAR */}
+      <section className="relative z-10 pt-24 pb-16">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
+              Blog<span className="text-indigo-400">Labs</span>
+            </h1>
+            <p className="mt-4 text-lg text-slate-400 max-w-2xl">
+              3D baskı teknolojileri, malzeme bilimi ve endüstriyel tasarıma dair en güncel içgörüler.
+            </p>
+          </div>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2">
             {featured.map((p) => {
-              const tag = getCategoryTitle(p.category) ?? "";
-              const img =
-                getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
+              const tag = getCategoryTitle(p.category) ?? "Makale";
+              const img = getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
               return (
                 <FeaturedCard
@@ -137,14 +142,22 @@ export default async function BlogPage() {
         </div>
       </section>
 
-      <section className="relative bg-white rounded-tl-[96px] md:rounded-tl-[192px]">
-        <div className="mx-auto max-w-7xl px-6 pt-16 pb-20">
-          <div className="mt-10 grid gap-10 lg:grid-cols-2">
+      {/* ALT BÖLÜM: KATEGORİLER (Bembeyaz bölüm kaldırıldı, temaya uyduruldu) */}
+      <section className="relative z-10 pb-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex items-center gap-4 mb-10">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+            <h2 className="text-2xl font-bold text-white uppercase tracking-widest text-center">
+              Kategoriler
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((c) => {
               const imgs = posts
                 .filter((p) => {
-                  const slug =
-                    p.category?.slug ?? p.category?.data?.attributes?.slug;
+                  const slug = p.category?.slug ?? p.category?.data?.attributes?.slug;
                   return slug === c.slug;
                 })
                 .slice(0, 4)
