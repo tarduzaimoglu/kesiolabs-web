@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const navItems = [
   { label: "Ana Sayfa", href: "/main" },
@@ -70,7 +70,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // KURŞUN GEÇİRMEZ SCROLL LOCK (Arka plan asla kayamaz)
+  // ARKA PLAN SCROLL LOCK
   useEffect(() => {
     if (open) {
       document.documentElement.style.setProperty("overflow", "hidden", "important");
@@ -163,7 +163,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="group md:hidden inline-flex items-center justify-center rounded-2xl w-12 h-12 bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 outline-none"
+                className="group md:hidden inline-flex items-center justify-center rounded-xl w-12 h-12 bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 outline-none"
               >
                 <PremiumBurger open={open} />
               </button>
@@ -171,11 +171,10 @@ export default function Header() {
           </div>
         </div>
 
-        {/* --- MOBİL MENÜ PANELİ (KUSURSUZ İZOLASYON & EN ÜST KATMAN) --- */}
+        {/* --- MOBİL MENÜ PANELİ --- */}
         <div
-          className={`md:hidden fixed inset-0 z-[9999] w-screen h-screen touch-none transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
+          className={`md:hidden fixed inset-0 z-[9999] w-screen h-[100dvh] touch-none transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
             ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-          style={{ height: "100vh", height: "-webkit-fill-available" }}
         >
           {/* Arka Plan Buzlu Karartma */}
           <div
@@ -183,12 +182,12 @@ export default function Header() {
             className={`absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-500 ease-out ${open ? "opacity-100" : "opacity-0"}`}
           />
 
-          {/* Sağdan Akıcı Şekilde Kayan Panel */}
+          {/* Sağdan Kayan Panel */}
           <div
             className={`absolute right-0 top-0 h-full w-[85%] max-w-[360px] bg-[#0b1120] border-l border-white/10 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
               ${open ? "translate-x-0" : "translate-x-full"}`}
           >
-            {/* Mobil Panel Üstü (Logo + Elite Kapat Butonu) */}
+            {/* Üst Kısım */}
             <div className="flex h-20 items-center justify-between px-6 border-b border-white/10 shrink-0">
               <Link href="/" onClick={() => setOpen(false)} className="inline-flex">
                 <img src="/logo.png" alt="KesioLabs" className={LOGO_CLASS} draggable={false} />
@@ -202,7 +201,7 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Linklerin Listesi */}
+            {/* Linkler */}
             <nav className="px-6 py-8 overflow-y-auto flex-1">
               <ul className="flex flex-col gap-3.5">
                 {navItems.map((item, idx) => {
