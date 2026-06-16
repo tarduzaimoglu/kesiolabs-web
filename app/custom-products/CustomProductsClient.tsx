@@ -5,6 +5,7 @@ import { QuoteForm } from "@/components/custom-products/QuoteForm";
 import { ProductTypeGrid } from "@/components/custom-products/ProductTypeGrid";
 import type { CustomProductType } from "@/lib/custom-products/types";
 import Logo3DPreview from "@/components/custom-products/Logo3DPreview";
+import { UploadCloud, FileImage, X, RefreshCw } from "lucide-react";
 
 function formatBytes(bytes: number) {
   if (!bytes) return "0 B";
@@ -23,8 +24,6 @@ function fileExt(name: string) {
 export default function CustomProductsClient({ types }: { types: CustomProductType[] }) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
-  // ✅ Çoklu seçim (id = slug)
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
 
   const selectedTypes = useMemo(() => {
@@ -61,151 +60,120 @@ export default function CustomProductsClient({ types }: { types: CustomProductTy
 
   return (
     <>
-      <div className="text-4xl font-semibold text-black">Firmanıza Özel Ürünler Tasarlayın</div>
-
-      <div className="mt-2 text-sm text-neutral-600">
-        Logonuzu yükleyin, ürün türlerini seçin ve markanıza özel üretim için teklif alın
+      {/* BAŞLIK ALANI */}
+      <div className="text-center mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-md">
+          Firmanıza Özel <span className="text-indigo-400">Ürünler</span> Tasarlayın
+        </h1>
+        <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
+          Logonuzu yükleyin, üretim seçeneklerini belirleyin ve markanıza özel profesyonel teklifinizi anında alın.
+        </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* SOL: Upload (A + C) */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="text-lg font-semibold text-black">Logonuzu buraya yükleyin</div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* SOL BÖLÜM: DOSYA YÜKLEME */}
+        <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl flex flex-col">
+          <h2 className="text-xl font-bold text-white mb-6">1. Logonuzu Yükleyin</h2>
 
-          {/* Mini akış */}
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <div className="text-xs font-semibold text-neutral-900">1</div>
-              <div className="mt-1 text-sm font-medium text-neutral-900">Logo Yükleyin</div>
-              <div className="mt-1 text-xs text-neutral-600">PNG/JPG/PDF</div>
+          {/* Mini Bilgi Akışı */}
+          <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
+            <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center">
+              <div className="w-8 h-8 mx-auto bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full font-bold text-sm mb-2 border border-indigo-500/30">1</div>
+              <div className="text-[13px] font-semibold text-slate-200">Logo Yükle</div>
+              <div className="text-[11px] text-slate-500 mt-1">PNG/JPG/PDF</div>
             </div>
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <div className="text-xs font-semibold text-neutral-900">2</div>
-              <div className="mt-1 text-sm font-medium text-neutral-900">Ürün Seçin</div>
-              <div className="mt-1 text-xs text-neutral-600">Birden fazla</div>
+            <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center">
+              <div className="w-8 h-8 mx-auto bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full font-bold text-sm mb-2 border border-indigo-500/30">2</div>
+              <div className="text-[13px] font-semibold text-slate-200">Ürün Seç</div>
+              <div className="text-[11px] text-slate-500 mt-1">Sınırsız Seçim</div>
             </div>
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <div className="text-xs font-semibold text-neutral-900">3</div>
-              <div className="mt-1 text-sm font-medium text-neutral-900">Teklif Alın</div>
-              <div className="mt-1 text-xs text-neutral-600">Hızlı dönüş</div>
+            <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-center">
+              <div className="w-8 h-8 mx-auto bg-indigo-500/20 text-indigo-400 flex items-center justify-center rounded-full font-bold text-sm mb-2 border border-indigo-500/30">3</div>
+              <div className="text-[13px] font-semibold text-slate-200">Teklif Al</div>
+              <div className="text-[11px] text-slate-500 mt-1">Hızlı Dönüş</div>
             </div>
           </div>
 
-          {/* Drag&Drop */}
+          {/* Drag & Drop Alanı */}
           <div
-            className={[
-              "mt-5 rounded-2xl border-2 border-dashed p-5 transition",
-              isDragging ? "border-neutral-900 bg-neutral-50" : "border-neutral-200 bg-white",
-            ].join(" ")}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragging(true);
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragging(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragging(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragging(false);
-              const f = e.dataTransfer.files?.[0];
-              acceptFile(f);
-            }}
+            className={`flex-1 rounded-3xl border-2 border-dashed p-8 md:p-10 transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden group
+              ${isDragging ? "border-indigo-500 bg-indigo-500/10 scale-[1.02]" : "border-white/10 bg-black/20 hover:border-indigo-400/50 hover:bg-white/[0.02]"}`}
+            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); const f = e.dataTransfer.files?.[0]; acceptFile(f); }}
           >
-            <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="text-sm font-medium text-neutral-900">Dosyayı buraya sürükleyip bırakın</div>
-                <div className="mt-1 text-xs text-neutral-600">
-                  Tercih edilen: şeffaf PNG. Arka plan otomatik kaldırılır.
-                </div>
-              </div>
-
-              <label className="inline-flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-black hover:border-neutral-900">
-                <input
-                  type="file"
-                  accept=".png,.jpg,.jpeg,.pdf"
-                  className="hidden"
-                  onChange={(e) => acceptFile(e.target.files?.[0])}
-                />
-                Logo Seç ve Yükle
-              </label>
+            <UploadCloud className={`w-14 h-14 mb-4 transition-colors ${isDragging ? "text-indigo-400" : "text-slate-500 group-hover:text-indigo-400"}`} />
+            
+            <div className="text-base font-medium text-slate-200">Dosyayı buraya sürükleyip bırakın</div>
+            <div className="mt-2 text-[13px] text-slate-500 max-w-xs">
+              Şeffaf arka planlı <strong className="text-slate-400">PNG</strong> tavsiye edilir. (Max 12MB)
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">PNG</span>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">JPG</span>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">PDF</span>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">Önerilen: 512px+</span>
-            </div>
+            <label className="mt-8 inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/25 cursor-pointer hover:-translate-y-0.5">
+              Bilgisayardan Seç
+              <input
+                type="file"
+                accept=".png,.jpg,.jpeg,.pdf"
+                className="hidden"
+                onChange={(e) => acceptFile(e.target.files?.[0])}
+              />
+            </label>
           </div>
 
-          {/* Dosya kartı */}
-          {logoFile ? (
-            <div className="mt-5 rounded-2xl border border-neutral-200 bg-white p-4">
-              <div className="flex items-start justify-between gap-3">
+          {/* Yüklenen Dosya Kartı */}
+          {logoFile && (
+            <div className="mt-6 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 backdrop-blur-sm flex items-center justify-between shadow-inner">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-500/20 rounded-xl">
+                  <FileImage className="w-6 h-6 text-indigo-400" />
+                </div>
                 <div>
-                  <div className="text-sm font-semibold text-neutral-900">{logoFile.name}</div>
-                  <div className="mt-1 text-xs text-neutral-600">
+                  <div className="text-sm font-semibold text-white line-clamp-1">{logoFile.name}</div>
+                  <div className="mt-1 text-[11px] font-medium text-indigo-300 uppercase tracking-wider">
                     {fileExt(logoFile.name)} • {formatBytes(logoFile.size)}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium hover:border-neutral-900"
-                    onClick={() => setLogoFile(null)}
-                  >
-                    Kaldır
-                  </button>
-
-                  <label className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-medium text-white hover:bg-black cursor-pointer">
-                    Değiştir
-                    <input
-                      type="file"
-                      accept=".png,.jpg,.jpeg,.pdf"
-                      className="hidden"
-                      onChange={(e) => acceptFile(e.target.files?.[0])}
-                    />
-                  </label>
-                </div>
+              <div className="flex items-center gap-2">
+                <label className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-slate-400 cursor-pointer transition-colors" title="Değiştir">
+                  <RefreshCw className="w-4 h-4" />
+                  <input type="file" accept=".png,.jpg,.jpeg,.pdf" className="hidden" onChange={(e) => acceptFile(e.target.files?.[0])} />
+                </label>
+                <button type="button" onClick={() => setLogoFile(null)} className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 transition-colors" title="Kaldır">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="mt-4 text-xs text-neutral-600">JPG, PNG veya PDF formatında logo yükleyin</div>
           )}
         </div>
 
-        {/* SAĞ: Preview */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="text-lg font-semibold text-black">Önizleme</div>
-          <div className="mt-4">
+        {/* SAĞ BÖLÜM: 3D ÖNİZLEME */}
+        <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl flex flex-col min-h-[400px]">
+          <h2 className="text-xl font-bold text-white mb-6">2. 3D Önizleme</h2>
+          <div className="flex-1 bg-black/40 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center relative">
+            <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none" />
             <Logo3DPreview file={logoFile} />
           </div>
         </div>
       </div>
 
-      <section className="mt-12 overflow-hidden rounded-tl-[192px] bg-white pt-10 md:rounded-tl-[192px]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center">
-            <div className="text-3xl font-semibold text-black">Ürün Türü Seçin</div>
-          </div>
+      {/* ALT BÖLÜM: ÜRÜN SEÇİMİ VE FORM */}
+      <section className="mt-24 border-t border-white/10 pt-20 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="text-center mb-12 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">3. Ürün Türü Seçin</h2>
+          <p className="mt-3 text-lg text-slate-400">Üretilmesini istediğiniz modelleri aşağıdan belirleyin (Birden fazla seçebilirsiniz).</p>
+        </div>
 
-          <div className="mt-8">
-            <ProductTypeGrid types={types} selectedIds={selectedTypeIds} onToggle={toggleType} />
-          </div>
+        <div className="relative z-10">
+          <ProductTypeGrid types={types} selectedIds={selectedTypeIds} onToggle={toggleType} />
+        </div>
 
-          <div className="mt-10">
-            <QuoteForm selectedTypes={selectedTypes} logoFile={logoFile} />
-          </div>
+        <div className="mt-20 relative z-10 max-w-4xl mx-auto">
+          <QuoteForm selectedTypes={selectedTypes} logoFile={logoFile} />
         </div>
       </section>
     </>
