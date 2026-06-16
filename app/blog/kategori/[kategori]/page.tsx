@@ -58,12 +58,12 @@ function FeaturedCard({
 }
 
 // SAYFA RENDER FONKSİYONU
-export default async function CategoryPage(props: any) {
-  // 1. DÜZELTME: Next.js 15+ için params objesini güvenli bir şekilde (await ile) çözümlüyoruz.
-  const params = await props.params;
+export default async function CategoryPage({ params }: { params: any }) {
+  // 1. DÜZELTME: Next.js versiyon farklarını önlemek için Promise.resolve kullanıyoruz.
+  const resolvedParams = await Promise.resolve(params);
   
-  // 2. DÜZELTME: Klasör adının [slug], [category] veya [id] olma ihtimaline karşı dinamik yakalama
-  const currentSlug = params?.slug || params?.category || params?.id;
+  // 2. KESİN ÇÖZÜM: Klasör adı ([slug], [kategori], vb.) ne olursa olsun, URL'deki değeri zorla alıyoruz.
+  const currentSlug = Object.values(resolvedParams || {})[0] as string;
 
   // Verileri paralel olarak çekiyoruz
   const [categories, posts] = await Promise.all([getCategories(), getPosts()]);
@@ -85,7 +85,9 @@ export default async function CategoryPage(props: any) {
       <main className="min-h-screen bg-[#0b1120] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white mb-4">Kategori Bulunamadı</h1>
-          <p className="text-slate-400 mb-6">Aradığınız kategori "{currentSlug}" sistemde kayıtlı değil.</p>
+          <p className="text-slate-400 mb-6">
+            Aradığınız kategori "{currentSlug || "Bilinmeyen"}" sistemde kayıtlı değil.
+          </p>
           <Link href="/blog" className="text-indigo-400 hover:text-white transition-colors">
             ← Blog'a Dön
           </Link>
