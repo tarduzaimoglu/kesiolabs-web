@@ -58,27 +58,34 @@ function FeaturedCard({
 }
 
 // SAYFA RENDER FONKSİYONU
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage(props: any) {
+  // 1. DÜZELTME: Next.js 15+ için params objesini güvenli bir şekilde (await ile) çözümlüyoruz.
+  const params = await props.params;
+  
+  // 2. DÜZELTME: Klasör adının [slug], [category] veya [id] olma ihtimaline karşı dinamik yakalama
+  const currentSlug = params?.slug || params?.category || params?.id;
+
   // Verileri paralel olarak çekiyoruz
   const [categories, posts] = await Promise.all([getCategories(), getPosts()]);
 
   // URL'den gelen slug'a göre mevcut kategoriyi bul
-  const currentCategory = categories.find((c) => c.slug === params.slug);
+  const currentCategory = categories.find((c: any) => c.slug === currentSlug);
 
   // Bu kategoriye ait olan postları filtrele ve tarihe göre sırala
   const categoryPosts = posts
-    .filter((p) => {
+    .filter((p: any) => {
       const postCatSlug = p.category?.slug ?? p.category?.data?.attributes?.slug;
-      return postCatSlug === params.slug;
+      return postCatSlug === currentSlug;
     })
-    .sort((a, b) => ((a.date ?? "") < (b.date ?? "") ? 1 : -1));
+    .sort((a: any, b: any) => ((a.date ?? "") < (b.date ?? "") ? 1 : -1));
 
-  // Eğer URL yanlış yazılmışsa veya kategori yoksa 404/Boş durum göster
+  // Eğer eşleşme yoksa Hata (Boş) ekranı göster
   if (!currentCategory) {
     return (
       <main className="min-h-screen bg-[#0b1120] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white mb-4">Kategori Bulunamadı</h1>
+          <p className="text-slate-400 mb-6">Aradığınız kategori "{currentSlug}" sistemde kayıtlı değil.</p>
           <Link href="/blog" className="text-indigo-400 hover:text-white transition-colors">
             ← Blog'a Dön
           </Link>
@@ -126,7 +133,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <div className="mx-auto max-w-7xl px-6">
           {categoryPosts.length > 0 ? (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-              {categoryPosts.map((p) => {
+              {categoryPosts.map((p: any) => {
                 const tag = getCategoryTitle(p.category) ?? currentCategory.title;
                 const img = getMediaUrl(p.coverImage) ?? "/blog/covers/placeholder-1.jpg";
 
