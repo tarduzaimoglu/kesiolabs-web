@@ -131,15 +131,11 @@ export async function strapiFetch<T>(path: string, init?: RequestInit): Promise<
 
   if (STRAPI_TOKEN) headers.set("Authorization", `Bearer ${STRAPI_TOKEN}`);
 
-  // init içinde next/revalidate varsa cache zorlamayalım
-  const hasCache = init && "cache" in init;
-  const hasNext = init && "next" in (init as any);
-
   const res = await fetch(url, {
     ...init,
     headers,
-   cache: init?.cache ?? "no-store",
-  next: (init as any)?.next ?? { revalidate: 0 },
+    cache: init?.cache,
+    next: (init as any)?.next ?? { revalidate: 300 },
   });
 
   if (!res.ok) {
@@ -263,7 +259,9 @@ export async function getCategories(): Promise<StrapiCategory[]> {
     pagination: { pageSize: 200 },
   });
 
-  const res = await strapiFetch<any>(`/api/categories${q}`);
+  const res = await strapiFetch<any>(`/api/categories${q}`, {
+    next: { revalidate: 300 },
+  });
   const items = unwrapCollection(res);
 
   return items.map((x: AnyObj) => ({
@@ -284,7 +282,9 @@ export async function getPosts(): Promise<StrapiPost[]> {
     },
   });
 
-  const res = await strapiFetch<any>(`/api/posts${q}`);
+  const res = await strapiFetch<any>(`/api/posts${q}`, {
+    next: { revalidate: 300 },
+  });
   const items = unwrapCollection(res);
 
   return items.map((x: AnyObj) => ({
@@ -309,7 +309,9 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
     },
   });
 
-  const res = await strapiFetch<any>(`/api/posts${q}`);
+  const res = await strapiFetch<any>(`/api/posts${q}`, {
+    next: { revalidate: 300 },
+  });
   const items = unwrapCollection(res);
   const x = items?.[0];
   if (!x) return null;
@@ -358,7 +360,7 @@ export async function getCatalogCategories(): Promise<{ key: string; label: stri
     "&fields[0]=slug" +
     "&fields[1]=title";
 
-  const res = await strapiFetch<any>(path);
+  const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
 
   type CategoryItem = { key: string; label: string };
@@ -394,7 +396,7 @@ export async function getCatalogProducts(): Promise<any[]> {
     "&fields[7]=specs" +
     "&fields[8]=qtyNoteRich";
 
-  const res = await strapiFetch<any>(path);
+  const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
 
   return items.map((x: AnyObj) => {
@@ -441,7 +443,7 @@ export async function getCustomProductTypes(): Promise<any[]> {
     "&filters[isActive][$eq]=true" +
     "&populate[0]=image";
 
-  const res = await strapiFetch<any>(path);
+  const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
 
   return items.map((x: AnyObj) => {

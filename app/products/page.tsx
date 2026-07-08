@@ -1,6 +1,4 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
+import { Suspense } from "react";
 import ProductsClient from "./ProductsClient";
 import { CartIndicator } from "@/components/cart/CartIndicator";
 import { getCatalogProducts, getCatalogCategories } from "@/lib/strapi";
@@ -24,11 +22,13 @@ export default async function ProductsPage() {
         </div>
 
         <div className="mt-6">
-          <ProductsClient
-            products={products}
-            categories={categories}
-            defaultCat="featured"
-          />
+          <Suspense fallback={null}>
+            <ProductsClient
+              products={products}
+              categories={categories}
+              defaultCat="featured"
+            />
+          </Suspense>
         </div>
       </div>
     </main>

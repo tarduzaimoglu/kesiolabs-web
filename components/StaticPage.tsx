@@ -14,7 +14,7 @@ function pickBySlug(list: any[], slug: string) {
 }
 
 async function fetchList(url: string) {
-  const res = await strapiFetch<any>(url, { cache: "no-store" });
+  const res = await strapiFetch<any>(url, { next: { revalidate: 3600 } });
   return res?.data ?? [];
 }
 

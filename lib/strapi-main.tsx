@@ -85,7 +85,7 @@ export async function getMainPage(): Promise<MainPageData | null> {
   const url = `${STRAPI_URL}/api/main-page?${qs}`;
 
   const res = await fetch(url, {
-    cache: "no-store",
+    next: { revalidate: 3600 },
     headers: {
       ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}),
     },

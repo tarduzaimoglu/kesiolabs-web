@@ -55,7 +55,7 @@ async function fetchJson(url: string) {
     headers: {
       ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}),
     },
-    cache: "no-store",
+    next: { revalidate: 3600 },
   });
   let json: any = null;
   try {

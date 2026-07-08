@@ -20,7 +20,7 @@ async function getQuotePage() {
 
   const res = await fetch(`${STRAPI_URL}/api/quote-page?${qs.toString()}`, {
     headers: STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : undefined,
-    cache: "no-store",
+    next: { revalidate: 3600 },
   });
 
   if (!res.ok) return null;
