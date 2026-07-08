@@ -24,9 +24,6 @@ function pathsForModel(model: string, entry: any): string[] {
       return ["/about"];
 
     case "main-page":
-      return ["/main"];
-
-    case "home-landing":
       return ["/"];
 
     case "quote-page":

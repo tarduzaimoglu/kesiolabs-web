@@ -14,17 +14,21 @@ export default function HowItWorksVideo({ title, description, video, posterImage
   if (!videoUrl) return null;
 
   return (
-    <section className="w-full bg-white">
-      <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-16">
+    <section className="relative z-10 py-20 md:py-32 bg-[#0b1120]">
+      <div className="max-w-6xl mx-auto px-5 md:px-8">
         <div className="text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-md">
+            {title}
+          </h2>
           {description ? (
-            <p className="mt-2 text-sm md:text-base text-slate-600">{description}</p>
+            <p className="mt-4 text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              {description}
+            </p>
           ) : null}
         </div>
 
-        <div className="mt-8 mx-auto max-w-4xl">
-          <div className="rounded-2xl overflow-hidden border border-slate-200 bg-black">
+        <div className="mt-10 mx-auto max-w-4xl">
+          <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm shadow-2xl">
             <video
               className="w-full h-auto"
               controls

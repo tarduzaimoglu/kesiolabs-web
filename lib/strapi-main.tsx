@@ -76,11 +76,25 @@ export type MainPageData = {
     question: string;
     answer?: any;
   }>;
+  quickLinks: Array<{
+    id: number;
+    title: string;
+    subtitle?: string | null;
+    href: string;
+    icon?: "box" | "book" | "bag" | null;
+  }>;
+  closingCta?: {
+    id: number;
+    baslik: string;
+    altMetin?: string | null;
+    butonYazisi?: string | null;
+    butonLink?: string | null;
+  } | null;
 };
 
 export async function getMainPage(): Promise<MainPageData | null> {
   const qs =
-    "populate[heroBanners][populate]=*&populate[whiteSection][populate]=*&populate[grayBanners][populate]=*&populate[howItWorks][populate]=*&populate[faqs][populate]=*";
+    "populate[heroBanners][populate]=*&populate[whiteSection][populate]=*&populate[grayBanners][populate]=*&populate[howItWorks][populate]=*&populate[faqs][populate]=*&populate[quickLinks][populate]=*&populate[closingCta][populate]=*";
 
   const url = `${STRAPI_URL}/api/main-page?${qs}`;
 

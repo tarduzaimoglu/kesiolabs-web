@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/main",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     // 🔥 Next 16 güvenlik kuralı: localhost / 127.0.0.1 default olarak BLOKLU
     // Bunu açmadan Strapi local image asla çalışmaz
