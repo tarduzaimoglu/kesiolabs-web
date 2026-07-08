@@ -1,31 +1,9 @@
 import TeklifAlClient from "@/components/quote/TeklifAlClient";
-
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN || "";
-
-function absUrl(url: string) {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `${STRAPI_URL}${url}`;
-}
+import { getQuotePage, mediaUrl } from "@/lib/strapi";
 
 function extractMediaUrl(media: any): string | null {
   const url = media?.url ?? null;
-  return url ? absUrl(url) : null;
-}
-
-async function getQuotePage() {
-  const qs = new URLSearchParams();
-  qs.set("populate", "howItWorksVideo");
-
-  const res = await fetch(`${STRAPI_URL}/api/quote-page?${qs.toString()}`, {
-    headers: STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : undefined,
-    next: { revalidate: 3600 },
-  });
-
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json?.data ?? null;
+  return url ? mediaUrl(url) : null;
 }
 
 export default async function QuotePage() {

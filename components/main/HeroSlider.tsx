@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { getMediaUrl } from "@/lib/strapi-main";
+import { mediaUrl } from "@/lib/strapi";
 
 type Banner = {
   id: number;
@@ -177,9 +177,10 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
             willChange: "transform",
           }}
         >
-          {items.map((b) => {
-            const desktopUrl = getMediaUrl(b?.imageDesktop?.url);
-            const mobileUrl = getMediaUrl(b?.imageMobile?.url);
+          {items.map((b, idx) => {
+            const desktopUrl = mediaUrl(b?.imageDesktop?.url);
+            const mobileUrl = mediaUrl(b?.imageMobile?.url);
+            const isFirst = idx === 0;
 
             return (
               <div key={b.id} className="relative h-full w-full flex-shrink-0">
@@ -190,7 +191,8 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
                       alt={b?.imageDesktop?.alternativeText || b.title}
                       fill
                       className="object-cover"
-                      priority
+                      priority={isFirst}
+                      sizes="(min-width: 768px) 100vw, 0px"
                       unoptimized
                       draggable={false}
                     />
@@ -204,7 +206,8 @@ export default function HeroSlider({ banners }: { banners: Banner[] }) {
                       alt={b?.imageMobile?.alternativeText || b.title}
                       fill
                       className="object-cover"
-                      priority
+                      priority={isFirst}
+                      sizes="(max-width: 767px) 100vw, 0px"
                       unoptimized
                       draggable={false}
                     />

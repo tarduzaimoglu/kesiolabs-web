@@ -1,9 +1,7 @@
 // app/about/page.tsx
 import Image from "next/image";
 import { Cpu, Target, Users } from "lucide-react";
-
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN || "";
+import { getAboutPage, mediaUrl } from "@/lib/strapi";
 
 type NormalizedMedia = {
   url: string;
@@ -27,12 +25,6 @@ function normalizeMedia(input: any): NormalizedMedia | null {
   return null;
 }
 
-function absStrapiUrl(maybeRelative?: string) {
-  if (!maybeRelative) return "";
-  if (maybeRelative.startsWith("http://") || maybeRelative.startsWith("https://")) return maybeRelative;
-  return `${STRAPI_URL}${maybeRelative}`;
-}
-
 function textFromBlocks(blocks: any): string[] {
   if (!Array.isArray(blocks)) return [];
   const paras: string[] = [];
@@ -46,53 +38,9 @@ function textFromBlocks(blocks: any): string[] {
   return paras;
 }
 
-type TeamMember = {
-  id?: number;
-  name?: string;
-  role?: string;
-  title?: string;
-  bio?: string;
-  photo?: any;
-};
-
-type AboutPageData = {
-  title?: string;
-  intro1?: string;
-  intro2?: string;
-  body2?: string;
-  heroImageDesktop?: any;
-  heroImageMobile?: any;
-  midImageDesktop?: any;
-  midImageMobile?: any;
-  heroAlt?: string;
-  midAlt?: string;
-  teamTitle?: string;
-  team?: TeamMember[];
-  body1?: any;
-};
-
-// --- FETCH FONKSİYONLARI ---
-async function fetchJson(url: string) {
-  const res = await fetch(url, {
-    headers: { ...(STRAPI_TOKEN ? { Authorization: `Bearer ${STRAPI_TOKEN}` } : {}) },
-    next: { revalidate: 3600 },
-  });
-  let json: any = null;
-  try { json = await res.json(); } catch {}
-  return { ok: res.ok, status: res.status, json };
-}
-
-async function fetchAboutPage(): Promise<{ ok: boolean; status: number; url: string; raw: any | null; data: AboutPageData | null; }> {
-  const url = `${STRAPI_URL}/api/about-page?populate[0]=heroImageDesktop&populate[1]=heroImageMobile&populate[2]=midImageDesktop&populate[3]=midImageMobile&populate[4]=team&populate[5]=team.photo`;
-  const r = await fetchJson(url);
-  const d = r.json?.data;
-  const data: AboutPageData | null = d ? (d.attributes ?? d) : null;
-  return { ok: r.ok, status: r.status, url, raw: r.json ?? null, data };
-}
-
 // --- YENİ EKRAN TASARIMI (UI) ---
 export default async function AboutPage() {
-  const result = await fetchAboutPage();
+  const result = await getAboutPage();
 
   if (!result.ok || !result.data) {
     return (
@@ -112,10 +60,10 @@ export default async function AboutPage() {
   const midD = normalizeMedia(a.midImageDesktop);
   const midM = normalizeMedia(a.midImageMobile);
 
-  const heroDUrl = heroD ? absStrapiUrl(heroD.url) : "";
-  const heroMUrl = heroM ? absStrapiUrl(heroM.url) : "";
-  const midDUrl = midD ? absStrapiUrl(midD.url) : "";
-  const midMUrl = midM ? absStrapiUrl(midM.url) : "";
+  const heroDUrl = heroD ? mediaUrl(heroD.url) ?? "" : "";
+  const heroMUrl = heroM ? mediaUrl(heroM.url) ?? "" : "";
+  const midDUrl = midD ? mediaUrl(midD.url) ?? "" : "";
+  const midMUrl = midM ? mediaUrl(midM.url) ?? "" : "";
 
   const body1Paras = textFromBlocks(a.body1);
   const team = Array.isArray(a.team) ? a.team : [];
@@ -215,7 +163,7 @@ export default async function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {team.map((m, idx) => {
-              const photoUrl = m.photo ? absStrapiUrl(normalizeMedia(m.photo)?.url) : "";
+              const photoUrl = m.photo ? mediaUrl(normalizeMedia(m.photo)?.url) ?? "" : "";
 
               return (
                 <div key={m.id ?? idx} className="group bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm hover:bg-white/[0.05] transition-all duration-300">

@@ -6,7 +6,7 @@ import GrayBannerSlider from "@/components/main/GrayBannerSlider";
 import HowItWorksVideo from "@/components/main/HowItWorksVideo";
 import FaqAccordion from "@/components/main/FaqAccordion";
 import ClosingCtaSection from "@/components/main/ClosingCtaSection";
-import { getMainPage, renderBlocks } from "@/lib/strapi-main";
+import { getMainPage, renderBlocks } from "@/lib/strapi";
 import { ArrowRight, Zap } from "lucide-react";
 
 export const viewport: Viewport = {

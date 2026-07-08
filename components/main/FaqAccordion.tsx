@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { renderBlocks } from "@/lib/strapi-main";
+import { renderBlocks } from "@/lib/strapi";
 import { ChevronDown, MessageCircleQuestion } from "lucide-react";
 
 type Faq = {

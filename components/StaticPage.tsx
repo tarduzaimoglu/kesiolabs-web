@@ -1,43 +1,7 @@
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { strapiFetch } from "@/lib/strapi";
-
-function normalize(raw: any) {
-  if (raw?.attributes) return { id: raw.id, ...raw.attributes }; // v4
-  return raw; // v5
-}
-
-function pickBySlug(list: any[], slug: string) {
-  const normalized = (list ?? []).map(normalize);
-  return normalized.find((x) => x?.slug === slug) ?? null;
-}
-
-async function fetchList(url: string) {
-  const res = await strapiFetch<any>(url, { next: { revalidate: 3600 } });
-  return res?.data ?? [];
-}
-
-async function fetchPageBySlug(slug: string) {
-  // 1) Strapi standard: filters
-  const urlFilters = `/api/pages?filters[slug][$eq]=${encodeURIComponent(slug)}`;
-  const list1 = await fetchList(urlFilters);
-  const hit1 = pickBySlug(list1, slug);
-  if (hit1) return hit1;
-
-  // 2) Senin debug’da gördüğümüz alternatif: filter (bazı setup’larda var ama filtrelemiyor olabilir)
-  const urlFilter = `/api/pages?filter[slug][$eq]=${encodeURIComponent(slug)}`;
-  const list2 = await fetchList(urlFilter);
-  const hit2 = pickBySlug(list2, slug);
-  if (hit2) return hit2;
-
-  // 3) Son çare: tüm sayfaları çek ve slug’a göre seç
-  const list3 = await fetchList(`/api/pages`);
-  const hit3 = pickBySlug(list3, slug);
-  if (hit3) return hit3;
-
-  return null;
-}
+import { getPageBySlug } from "@/lib/strapi";
 
 export default async function StaticPage({
   slug,
@@ -46,7 +10,7 @@ export default async function StaticPage({
   slug: string;
   fallbackTitle: string;
 }) {
-  const page = await fetchPageBySlug(slug);
+  const page = await getPageBySlug(slug);
   if (!page) return notFound();
 
   const title = page.heroTitle || page.title || fallbackTitle;

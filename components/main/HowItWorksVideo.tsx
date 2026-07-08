@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/lib/strapi-main";
+import { mediaUrl } from "@/lib/strapi";
 
 type Props = {
   title: string;
@@ -8,8 +8,8 @@ type Props = {
 };
 
 export default function HowItWorksVideo({ title, description, video, posterImage }: Props) {
-  const videoUrl = getMediaUrl(video?.url);
-  const posterUrl = getMediaUrl(posterImage?.url);
+  const videoUrl = mediaUrl(video?.url);
+  const posterUrl = mediaUrl(posterImage?.url);
 
   if (!videoUrl) return null;
 

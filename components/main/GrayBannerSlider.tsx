@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { getMediaUrl } from "@/lib/strapi-main";
+import { mediaUrl } from "@/lib/strapi";
 import { ArrowRight } from "lucide-react";
 
 type GrayBanner = {
@@ -152,8 +152,8 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
             willChange: "transform",
           }}
         >
-          {items.map((b) => {
-            const img = getMediaUrl(b?.image?.url);
+          {items.map((b, idx) => {
+            const img = mediaUrl(b?.image?.url);
             return (
               <div key={b.id} className="relative h-[480px] md:h-[600px] w-full flex-shrink-0">
                 {img ? (
@@ -163,9 +163,10 @@ export default function GrayBannerSlider({ banners }: { banners: GrayBanner[] })
                       alt={b?.image?.alternativeText || b.title}
                       fill
                       className="object-cover"
+                      sizes="100vw"
                       unoptimized
                       draggable={false}
-                      priority
+                      priority={idx === 0}
                     />
                     {/* Görsel üzerine düşen şık karanlık maske (Overlay) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-[#0b1120]/70 to-transparent" />

@@ -1,4 +1,5 @@
-// lib/strapi.ts
+// lib/strapi.tsx
+import type { ReactNode } from "react";
 
 type AnyObj = Record<string, any>;
 
@@ -146,6 +147,31 @@ export async function strapiFetch<T>(path: string, init?: RequestInit): Promise<
   return (await res.json()) as T;
 }
 
+/** strapiFetch'in aksine hata fırlatmaz; ok/status/json döner (graceful-degrade sayfalar için) */
+async function strapiFetchRaw(
+  path: string,
+  init?: RequestInit
+): Promise<{ ok: boolean; status: number; json: any }> {
+  const url = `${STRAPI_URL}${path}`;
+  const headers = new Headers(init?.headers);
+
+  if (STRAPI_TOKEN) headers.set("Authorization", `Bearer ${STRAPI_TOKEN}`);
+
+  const res = await fetch(url, {
+    ...init,
+    headers,
+    cache: init?.cache,
+    next: (init as any)?.next ?? { revalidate: 300 },
+  });
+
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch {}
+
+  return { ok: res.ok, status: res.status, json };
+}
+
 /* ---------------------------------------
    ✅ MEDIA HELPERS (single + multi)
 ---------------------------------------- */
@@ -229,6 +255,29 @@ export function getCategoryTitle(category: any): string | null {
   const v4 = category?.data?.attributes?.title;
   const v5 = category?.title;
   return v4 || v5 || null;
+}
+
+/** Strapi Blocks (rich text) -> basit JSX (paragraf) */
+export function renderBlocks(blocks: any): ReactNode[] {
+  if (!Array.isArray(blocks)) return [];
+
+  return blocks
+    .filter((b) => b?.type === "paragraph" && Array.isArray(b.children))
+    .map((b, idx) => {
+      const text = b.children
+        .filter((c: AnyObj) => c?.type === "text")
+        .map((c: AnyObj) => c.text || "")
+        .join("");
+
+      // boş paragraf ise küçük boşluk bırak
+      if (!text.trim()) return <div key={idx} className="h-3" />;
+
+      return (
+        <p key={idx} className="text-sm md:text-base leading-relaxed text-slate-600">
+          {text}
+        </p>
+      );
+    });
 }
 
 /* -----------------------------
@@ -459,4 +508,161 @@ export async function getCustomProductTypes(): Promise<any[]> {
       imageUrl: img,
     };
   });
+}
+
+/* ---------------------------------------
+   MAIN PAGE (anasayfa)
+---------------------------------------- */
+
+export type MainPageData = {
+  id: number;
+  heroBanners: Array<{
+    id: number;
+    title: string;
+    subtitle?: string | null;
+    buttonText?: string | null;
+    buttonLink?: string | null;
+    imageDesktop?: AnyObj | null;
+    imageMobile?: AnyObj | null;
+  }>;
+  whiteSection?: {
+    id: number;
+    title: string;
+    description?: any;
+    buttonText?: string | null;
+    buttonLink?: string | null;
+  } | null;
+  grayBanners: Array<{
+    id: number;
+    title: string;
+    subtitle?: string | null;
+    buttonText?: string | null;
+    buttonLink?: string | null;
+    image?: AnyObj | null;
+  }>;
+  howItWorks?: {
+    id: number;
+    title: string;
+    description?: string | null;
+    video?: AnyObj | null;
+    posterImage?: AnyObj | null;
+  } | null;
+  faqs: Array<{
+    id: number;
+    question: string;
+    answer?: any;
+  }>;
+  quickLinks: Array<{
+    id: number;
+    title: string;
+    subtitle?: string | null;
+    href: string;
+    icon?: "box" | "book" | "bag" | null;
+  }>;
+  closingCta?: {
+    id: number;
+    baslik: string;
+    altMetin?: string | null;
+    butonYazisi?: string | null;
+    butonLink?: string | null;
+  } | null;
+};
+
+export async function getMainPage(): Promise<MainPageData | null> {
+  const qs =
+    "populate[heroBanners][populate]=*&populate[whiteSection][populate]=*&populate[grayBanners][populate]=*&populate[howItWorks][populate]=*&populate[faqs][populate]=*&populate[quickLinks][populate]=*&populate[closingCta][populate]=*";
+
+  const r = await strapiFetchRaw(`/api/main-page?${qs}`, { next: { revalidate: 3600 } });
+  if (!r.ok) return null;
+
+  return r.json?.data ?? null;
+}
+
+/* ---------------------------------------
+   QUOTE PAGE
+---------------------------------------- */
+
+export async function getQuotePage(): Promise<any | null> {
+  const qs = new URLSearchParams();
+  qs.set("populate", "howItWorksVideo");
+
+  const r = await strapiFetchRaw(`/api/quote-page?${qs.toString()}`, {
+    next: { revalidate: 3600 },
+  });
+  if (!r.ok) return null;
+
+  return r.json?.data ?? null;
+}
+
+/* ---------------------------------------
+   ABOUT PAGE
+---------------------------------------- */
+
+export type AboutTeamMember = {
+  id?: number;
+  name?: string;
+  role?: string;
+  title?: string;
+  bio?: string;
+  photo?: any;
+};
+
+export type AboutPageData = {
+  title?: string;
+  intro1?: string;
+  intro2?: string;
+  body2?: string;
+  heroImageDesktop?: any;
+  heroImageMobile?: any;
+  midImageDesktop?: any;
+  midImageMobile?: any;
+  heroAlt?: string;
+  midAlt?: string;
+  teamTitle?: string;
+  team?: AboutTeamMember[];
+  body1?: any;
+};
+
+export async function getAboutPage(): Promise<{
+  ok: boolean;
+  status: number;
+  url: string;
+  raw: any | null;
+  data: AboutPageData | null;
+}> {
+  const path =
+    "/api/about-page?populate[0]=heroImageDesktop&populate[1]=heroImageMobile&populate[2]=midImageDesktop&populate[3]=midImageMobile&populate[4]=team&populate[5]=team.photo";
+
+  const r = await strapiFetchRaw(path, { next: { revalidate: 3600 } });
+  const d = r.json?.data;
+  const data: AboutPageData | null = d ? (d.attributes ?? d) : null;
+
+  return { ok: r.ok, status: r.status, url: `${STRAPI_URL}${path}`, raw: r.json ?? null, data };
+}
+
+/* ---------------------------------------
+   STATIC PAGES (corporate / faq / privacy-policy / delivery-returns)
+---------------------------------------- */
+
+export async function getPageBySlug(slug: string): Promise<any | null> {
+  const fetchList = async (path: string) => {
+    const res = await strapiFetch<any>(path, { next: { revalidate: 3600 } });
+    return unwrapCollection(res);
+  };
+
+  const pick = (list: any[]) => list.find((x) => x?.slug === slug) ?? null;
+
+  // 1) Strapi standard: filters
+  const list1 = await fetchList(`/api/pages?filters[slug][$eq]=${encodeURIComponent(slug)}`);
+  const hit1 = pick(list1);
+  if (hit1) return hit1;
+
+  // 2) Bazı setup'larda var ama filtrelemiyor olabilir
+  const list2 = await fetchList(`/api/pages?filter[slug][$eq]=${encodeURIComponent(slug)}`);
+  const hit2 = pick(list2);
+  if (hit2) return hit2;
+
+  // 3) Son çare: tüm sayfaları çek ve slug'a göre seç
+  const list3 = await fetchList(`/api/pages`);
+  return pick(list3);
 }
