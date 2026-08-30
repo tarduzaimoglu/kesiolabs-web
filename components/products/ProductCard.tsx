@@ -5,6 +5,41 @@ import Image from "next/image";
 import type { Product } from "@/lib/products/types";
 import { CART_MIN_QTY, FALLBACK_UNIT_PRICE } from "@/components/cart/CartContext";
 
+function resolveLocalThumbSrc(raw: string) {
+  const absolute = /^https?:\/\//i.test(raw);
+  if (!absolute && !raw.startsWith("/uploads/")) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw, "https://local.invalid");
+  } catch {
+    return null;
+  }
+
+  if (
+    !parsed.pathname.startsWith("/uploads/") ||
+    parsed.search ||
+    parsed.hash ||
+    raw.includes("\\") ||
+    raw.includes("%")
+  ) {
+    return null;
+  }
+
+  const relative = parsed.pathname.slice("/uploads/".length);
+  const segments = relative.split("/");
+  if (
+    !relative ||
+    segments.some((segment) => !segment || segment === "." || segment === "..") ||
+    !/\.(jpg|jpeg|png)$/i.test(relative)
+  ) {
+    return null;
+  }
+
+  const thumbnailPath = `/uploads/thumbs/${relative.replace(/\.(jpg|jpeg|png)$/i, ".webp")}`;
+  return absolute ? `${parsed.origin}${thumbnailPath}` : thumbnailPath;
+}
+
 function resolveThumbSrc(product: any) {
   const raw =
     (typeof product?.imageUrl === "string" && product.imageUrl.trim() && product.imageUrl) ||
@@ -12,7 +47,10 @@ function resolveThumbSrc(product: any) {
 
   if (!raw) return "/products/placeholder.png";
 
-  // ✅ Supabase değilse dokunma
+  const localThumb = resolveLocalThumbSrc(raw);
+  if (localThumb) return localThumb;
+
+  // Supabase behavior is retained for rollback.
   if (!raw.includes("/storage/v1/object/public/media/")) return raw;
 
   // ✅ Eğer zaten webp/avif ise: thumbs'a yönlendirme (thumb üretilmemiş olabilir)

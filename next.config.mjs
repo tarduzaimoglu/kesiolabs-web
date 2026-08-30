@@ -27,6 +27,12 @@ const nextConfig = {
         port: "1337",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "kesiolabs-slave1.tail4be241.ts.net",
+        port: "8443",
+        pathname: "/uploads/**",
+      },
 
       // ✅ Supabase Storage (public)
      {
