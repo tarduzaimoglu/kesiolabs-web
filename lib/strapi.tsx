@@ -178,8 +178,14 @@ async function strapiFetchRaw(
 
 function absMediaUrl(maybeRelativeUrl?: string | null) {
   if (!maybeRelativeUrl) return null;
-  if (typeof maybeRelativeUrl === "string" && maybeRelativeUrl.startsWith("http")) return maybeRelativeUrl;
-  return `${STRAPI_URL}${maybeRelativeUrl}`;
+  if (maybeRelativeUrl.startsWith("/uploads/")) return `/backend${maybeRelativeUrl}`;
+  try {
+    const url = new URL(maybeRelativeUrl);
+    if (url.origin === "https://kesiolabs-slave1.tail4be241.ts.net:8443" && url.pathname.startsWith("/uploads/")) {
+      return `/backend${url.pathname}${url.search}${url.hash}`;
+    }
+  } catch {}
+  return maybeRelativeUrl;
 }
 
 /**
@@ -238,9 +244,7 @@ export function getMediaUrl(media: any): string | null {
 
 /** URL string ile çalışmak için (kurumsal sayfalar vs.) */
 export function mediaUrl(maybeRelativeUrl?: string | null) {
-  if (!maybeRelativeUrl) return null;
-  if (maybeRelativeUrl.startsWith("http")) return maybeRelativeUrl;
-  return `${STRAPI_URL}${maybeRelativeUrl}`;
+  return absMediaUrl(maybeRelativeUrl);
 }
 
 export function getCategorySlug(category: any): string | null {
@@ -457,7 +461,7 @@ export async function getCatalogProducts(): Promise<any[]> {
       .map((m: any) => getMediaUrl(m))
       .filter((u): u is string => typeof u === "string" && u.length > 0);
 
-    const primaryImg = imageUrls[0] || x?.imageUrl || "";
+    const primaryImg = imageUrls[0] || mediaUrl(x?.imageUrl) || "";
 
     return {
       id: String(x?.id ?? x?.documentId ?? ""),
@@ -496,7 +500,7 @@ export async function getCustomProductTypes(): Promise<any[]> {
   const items = unwrapCollection(res);
 
   return items.map((x: AnyObj) => {
-    const img = getMediaUrl(x?.image) || x?.imageUrl || "/products/placeholder.png";
+    const img = getMediaUrl(x?.image) || mediaUrl(x?.imageUrl) || "/products/placeholder.png";
 
     return {
       id: String(x?.id ?? x?.documentId ?? ""),

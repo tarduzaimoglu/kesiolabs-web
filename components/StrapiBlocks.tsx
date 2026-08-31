@@ -2,13 +2,15 @@ import React from "react";
 
 type AnyObj = Record<string, any>;
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || process.env.STRAPI_URL || "http://localhost:1337";
-
 function absolutizeUrl(url: string) {
   if (!url) return url;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  // relative "/uploads/..." ise strapi host ekle
-  if (url.startsWith("/")) return `${STRAPI_URL}${url}`;
+  if (url.startsWith("/uploads/")) return `/backend${url}`;
+  try {
+    const parsed = new URL(url);
+    if (parsed.origin === "https://kesiolabs-slave1.tail4be241.ts.net:8443" && parsed.pathname.startsWith("/uploads/")) {
+      return `/backend${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+  } catch {}
   return url;
 }
 

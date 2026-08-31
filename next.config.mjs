@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/backend/:path*",
+        destination: "https://kesiolabs-slave1.tail4be241.ts.net:8443/:path*",
+      },
+    ];
+  },
   async redirects() {
     return [
       {

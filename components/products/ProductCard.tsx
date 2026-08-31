@@ -16,14 +16,18 @@ function resolveLocalThumbSrc(raw: string) {
     return null;
   }
 
+  if (absolute && parsed.origin !== "https://kesiolabs-slave1.tail4be241.ts.net:8443") return null;
+
   if (
     !parsed.pathname.startsWith("/uploads/") ||
-    parsed.search ||
-    parsed.hash ||
     raw.includes("\\") ||
     raw.includes("%")
   ) {
     return null;
+  }
+
+  if (parsed.search || parsed.hash) {
+    return `/backend${parsed.pathname}${parsed.search}${parsed.hash}`;
   }
 
   const relative = parsed.pathname.slice("/uploads/".length);
@@ -37,7 +41,7 @@ function resolveLocalThumbSrc(raw: string) {
   }
 
   const thumbnailPath = `/uploads/thumbs/${relative.replace(/\.(jpg|jpeg|png)$/i, ".webp")}`;
-  return absolute ? `${parsed.origin}${thumbnailPath}` : thumbnailPath;
+  return `/backend${thumbnailPath}`;
 }
 
 function resolveThumbSrc(product: any) {
