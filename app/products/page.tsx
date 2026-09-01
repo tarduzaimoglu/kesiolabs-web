@@ -1,36 +1,11 @@
-import { Suspense } from "react";
+import type { Metadata } from "next";
 import ProductsClient from "./ProductsClient";
-import { CartIndicator } from "@/components/cart/CartIndicator";
-import { getCatalogProducts, getCatalogCategories } from "@/lib/strapi";
+import { getCatalogCategories, getCatalogProducts } from "@/lib/strapi";
 
-export default async function ProductsPage() {
-  const [products, cats] = await Promise.all([
-    getCatalogProducts(),
-    getCatalogCategories(),
-  ]);
+export const metadata: Metadata = { title: "Ürünler", description: "Kesiolabs ürün ve dijital üretim çözümleri kataloğu.", alternates: { canonical: "/products" } };
 
-  const categories = [{ key: "featured", label: "Öne Çıkanlar" }, ...cats];
-
-  return (
-    <main className="min-h-screen bg-white">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8">
-        <div className="relative flex items-start justify-between">
-          <div />
-          <div className="hidden md:block">
-            <CartIndicator />
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <Suspense fallback={null}>
-            <ProductsClient
-              products={products}
-              categories={categories}
-              defaultCat="featured"
-            />
-          </Suspense>
-        </div>
-      </div>
-    </main>
-  );
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
+  const params = await searchParams;
+  const [products, categories] = await Promise.all([getCatalogProducts(), getCatalogCategories()]);
+  return <main className="min-h-screen bg-white"><section className="border-b border-black/10 bg-black px-6 py-20 text-white"><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#DA291C]">Kesiolabs ürün kataloğu</p><h1 className="mt-5 max-w-4xl text-4xl font-bold tracking-[-0.04em] md:text-6xl">Üretim ihtiyaçları için doğru çözümü bulun.</h1><p className="mt-6 max-w-2xl text-base leading-7 text-[#B7B7B7]">Kategorileri inceleyin, teknik ihtiyaçlarınıza uygun ürün detaylarına ulaşın.</p></div></section><section className="mx-auto max-w-7xl px-6 py-12"><ProductsClient products={products} categories={categories} initialCategory={params.category} /></section></main>;
 }

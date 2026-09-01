@@ -1,4 +1,5 @@
-// lib/strapi.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Legacy Strapi v4/v5 normalization intentionally accepts heterogeneous API shapes.
 import type { ReactNode } from "react";
 
 type AnyObj = Record<string, any>;
@@ -45,6 +46,8 @@ export function buildQuery(params: Record<string, any>) {
   if (params.filters?.slug?.$eq) add("filters[slug][$eq]", params.filters.slug.$eq);
   if (params.filters?.category?.slug?.$eq)
     add("filters[category][slug][$eq]", params.filters.category.slug.$eq);
+  if (params.filters?.articleType?.$eq)
+    add("filters[articleType][$eq]", params.filters.articleType.$eq);
 
   // sort[0]=date:desc
   if (Array.isArray(params.sort)) {
@@ -304,6 +307,7 @@ export type StrapiPost = {
   coverImage?: any;
   category?: any;
   contentBlocks?: any;
+  articleType?: "article" | "news" | "application-note" | null;
 };
 
 export async function getCategories(): Promise<StrapiCategory[]> {
@@ -349,6 +353,7 @@ export async function getPosts(): Promise<StrapiPost[]> {
     coverImage: x?.coverImage,
     category: x?.category,
     contentBlocks: x?.contentBlocks,
+    articleType: x?.articleType ?? null,
   }));
 }
 
@@ -378,6 +383,7 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
     coverImage: x?.coverImage,
     category: x?.category,
     contentBlocks: x?.contentBlocks,
+    articleType: x?.articleType ?? null,
   };
 }
 
@@ -404,26 +410,35 @@ function normalizeStringArray(input: any): string[] {
  * ✅ CategoryProduct tablarını Strapi’den çeker
  * UID: /api/category-products
  */
-export async function getCatalogCategories(): Promise<{ key: string; label: string }[]> {
+export type CatalogCategory = {
+  key: string;
+  label: string;
+  description?: string;
+  image?: string | null;
+};
+
+export async function getCatalogCategories(): Promise<CatalogCategory[]> {
   const path =
     "/api/category-products" +
     "?sort=order:asc" +
     "&sort=createdAt:desc" +
     "&filters[isActive][$eq]=true" +
     "&fields[0]=slug" +
-    "&fields[1]=title";
+    "&fields[1]=title" +
+    "&fields[2]=description" +
+    "&populate[image][fields][0]=url";
 
   const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
 
-  type CategoryItem = { key: string; label: string };
-
 return items
-  .map((x: AnyObj): CategoryItem => ({
+  .map((x: AnyObj): CatalogCategory => ({
     key: String(x?.slug ?? x?.id ?? ""),
     label: String(x?.title ?? x?.slug ?? "Kategori"),
+    description: String(x?.description ?? ""),
+    image: getMediaUrl(x?.image),
   }))
-  .filter((x: CategoryItem) => Boolean(x.key && x.label));
+  .filter((x: CatalogCategory) => Boolean(x.key && x.label));
 }
 
 /**
@@ -440,14 +455,14 @@ export async function getCatalogProducts(): Promise<any[]> {
     "&populate[0]=image" +
     "&populate[1]=category_product" +
     "&fields[0]=title" +
-    "&fields[1]=featured" +
-    "&fields[2]=order" +
-    "&fields[3]=createdAt" +
-    "&fields[4]=wholesalePrice" +
-    "&fields[5]=minQtyText" +
-    "&fields[6]=bullets" +
-    "&fields[7]=specs" +
-    "&fields[8]=qtyNoteRich";
+    "&fields[1]=slug" +
+    "&fields[2]=shortDescription" +
+    "&fields[3]=description" +
+    "&fields[4]=featured" +
+    "&fields[5]=order" +
+    "&fields[6]=createdAt" +
+    "&fields[7]=bullets" +
+    "&fields[8]=specs";
 
   const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
@@ -466,6 +481,9 @@ export async function getCatalogProducts(): Promise<any[]> {
     return {
       id: String(x?.id ?? x?.documentId ?? ""),
       title: x?.title || "",
+      slug: x?.slug || "",
+      shortDescription: x?.shortDescription || "",
+      description: x?.description || "",
       category: categoryKey || "other",
       featured: !!x?.featured,
       createdAtISO: x?.createdAt
@@ -474,12 +492,64 @@ export async function getCatalogProducts(): Promise<any[]> {
       imageUrls,
       primaryImg,
       image: primaryImg,
-      wholesalePrice:
-        typeof x?.wholesalePrice === "number" ? x.wholesalePrice : undefined,
-      minQtyText: x?.minQtyText || "",
       bullets: normalizeStringArray(x?.bullets),
       specs: normalizeStringArray(x?.specs),
-      qtyNoteRich: typeof x?.qtyNoteRich === "string" ? x.qtyNoteRich : "",
+    };
+  });
+}
+
+export async function getCatalogProductBySlug(slug: string): Promise<any | null> {
+  const products = await getCatalogProducts();
+  return products.find((product) => product.slug === slug) ?? null;
+}
+
+export type RepresentativeGroup = {
+  id: string;
+  title: string;
+  slug: string;
+  sortOrder: number;
+};
+
+export type Representative = {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string | null;
+  shortDescription: string;
+  website: string;
+  sortOrder: number;
+  groupSlug: string | null;
+};
+
+export async function getRepresentativeGroups(): Promise<RepresentativeGroup[]> {
+  const res = await strapiFetch<any>(
+    "/api/representative-groups?sort=sortOrder:asc&pagination[pageSize]=100",
+    { next: { revalidate: 300 } },
+  );
+  return unwrapCollection(res).map((x: AnyObj) => ({
+    id: String(x?.id ?? x?.documentId ?? ""),
+    title: String(x?.title ?? ""),
+    slug: String(x?.slug ?? ""),
+    sortOrder: Number(x?.sortOrder ?? 0),
+  }));
+}
+
+export async function getRepresentatives(): Promise<Representative[]> {
+  const res = await strapiFetch<any>(
+    "/api/representatives?sort=sortOrder:asc&populate[0]=logo&populate[1]=group&pagination[pageSize]=200",
+    { next: { revalidate: 300 } },
+  );
+  return unwrapCollection(res).map((x: AnyObj) => {
+    const group = unwrapRelation(x?.group);
+    return {
+      id: String(x?.id ?? x?.documentId ?? ""),
+      name: String(x?.name ?? ""),
+      slug: String(x?.slug ?? ""),
+      logo: getMediaUrl(x?.logo),
+      shortDescription: String(x?.shortDescription ?? ""),
+      website: String(x?.website ?? ""),
+      sortOrder: Number(x?.sortOrder ?? 0),
+      groupSlug: group?.slug ? String(group.slug) : null,
     };
   });
 }

@@ -3,13 +3,17 @@
 /* Tailwind v4 uyumlu – SADECE ZEMİN KONTROLÜ */
 :root {
   color-scheme: light;
+  --brand-primary: #da291c;
+  --brand-black: #000000;
+  --brand-white: #ffffff;
+  --brand-gray: #b7b7b7;
 }
 
 html,
 body {
   min-height: 100%;
   background-color: #ffffff;
-  color: #0f172a;
+  color: #000000;
 
   /* ✅ Mobilde sağa taşma engeli
      hidden yerine clip: nav içi scroll davranışını daha az bozar */
@@ -29,6 +33,16 @@ body {
   -ms-overflow-style: none; /* IE/Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+.article-content { color: rgba(0, 0, 0, 0.76); font-size: 1.0625rem; line-height: 1.85; }
+.article-content h1, .article-content h2, .article-content h3 { color: #000; font-weight: 750; line-height: 1.2; margin: 2.25rem 0 1rem; }
+.article-content h1 { font-size: 2rem; } .article-content h2 { font-size: 1.6rem; } .article-content h3 { font-size: 1.3rem; }
+.article-content p, .article-content ul, .article-content ol, .article-content blockquote { margin: 1.15rem 0; }
+.article-content ul, .article-content ol { padding-left: 1.4rem; }
+.article-content ul { list-style: disc; } .article-content ol { list-style: decimal; }
+.article-content a { color: #da291c; text-decoration: underline; text-underline-offset: 3px; }
+.article-content blockquote { border-left: 3px solid #da291c; padding: .5rem 0 .5rem 1.25rem; color: rgba(0,0,0,.62); }
+.article-content img { max-width: 100%; height: auto; margin: 2rem 0; }
 
 /* ============================
    Premium mobile sheet helpers

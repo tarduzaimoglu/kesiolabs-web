@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -8,14 +9,18 @@ function pathsForModel(model: string, entry: any): string[] {
 
   switch (model) {
     case "post":
-      return ["/blog", "/blog/kategori", ...(slug ? [`/blog/${slug}`] : [])];
+      return ["/makaleler", "/makaleler/haberler", "/makaleler/uygulama-notlari", ...(slug ? [`/makaleler/${slug}`] : [])];
 
     case "category":
-      return ["/blog", "/blog/kategori"];
+      return ["/makaleler"];
 
     case "product":
     case "category-product":
       return ["/products"];
+
+    case "representative":
+    case "representative-group":
+      return ["/temsilcilikler"];
 
     case "custom-product-type":
       return ["/custom-products"];

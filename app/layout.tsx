@@ -4,17 +4,20 @@ import { CartProvider } from "@/components/cart/CartContext";
 // ✅ Senin header/footer dosyaların nerede ise burayı ona göre ayarla:
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { getCatalogCategories } from "@/lib/strapi";
 
 export const metadata = {
-  title: "KesioLabs",
-  description: "KesioLabs",
+  metadataBase: new URL("https://www.kesiolabs.com"),
+  title: { default: "Kesiolabs", template: "%s | Kesiolabs" },
+  description: "Dijital üretim, 3D baskı ve endüstriyel teknoloji çözümleri.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const categories = await getCatalogCategories().catch(() => []);
   return (
     <html lang="tr">
       <head>
@@ -24,7 +27,7 @@ export default function RootLayout({
 
       <body>
         <CartProvider>
-          <Header />
+          <Header categories={categories} />
           {children}
           <Footer />
         </CartProvider>
