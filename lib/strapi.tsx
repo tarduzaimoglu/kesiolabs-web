@@ -391,21 +391,6 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
    CATALOG / PRODUCTS
 ---------------------------------------- */
 
-function normalizeStringArray(input: any): string[] {
-  if (!input) return [];
-  if (typeof input === "string") {
-    try {
-      const parsed = JSON.parse(input);
-      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
-      return [];
-    } catch {
-      return [];
-    }
-  }
-  if (Array.isArray(input)) return input.map(String).filter(Boolean);
-  return [];
-}
-
 /**
  * ✅ CategoryProduct tablarını Strapi’den çeker
  * UID: /api/category-products
@@ -416,6 +401,57 @@ export type CatalogCategory = {
   description?: string;
   image?: string | null;
 };
+
+export type TechnicalSpecification = {
+  group: string;
+  label: string;
+  value: string;
+  unit: string;
+  sortOrder: number;
+};
+
+export type CatalogTextItem = { text: string; sortOrder: number };
+export type CatalogEquipment = {
+  name: string;
+  type: "STANDARD" | "OPTIONAL";
+  description: string;
+  sortOrder: number;
+};
+export type CatalogVariant = {
+  name: string;
+  description: string;
+  sortOrder: number;
+  specifications: TechnicalSpecification[];
+  equipment: CatalogEquipment[];
+};
+export type CatalogProduct = {
+  id: string;
+  title: string;
+  slug: string;
+  manufacturer: string;
+  model: string;
+  productType: string;
+  shortDescription: string;
+  description: string;
+  category: string;
+  featured: boolean;
+  imageUrls: string[];
+  primaryImg: string;
+  technicalSpecifications: TechnicalSpecification[];
+  features: CatalogTextItem[];
+  applications: CatalogTextItem[];
+  equipment: CatalogEquipment[];
+  variants: CatalogVariant[];
+};
+
+const byOrder = <T extends { sortOrder: number }>(a: T, b: T) => a.sortOrder - b.sortOrder;
+const mapSpecifications = (items: any): TechnicalSpecification[] => (Array.isArray(items) ? items : []).map((item: AnyObj) => ({
+  group: String(item?.group ?? ""), label: String(item?.label ?? ""), value: String(item?.value ?? ""), unit: String(item?.unit ?? ""), sortOrder: Number(item?.sortOrder ?? 0),
+})).filter((item) => item.label && item.value).sort(byOrder);
+const mapTextItems = (items: any): CatalogTextItem[] => (Array.isArray(items) ? items : []).map((item: AnyObj) => ({ text: String(item?.text ?? ""), sortOrder: Number(item?.sortOrder ?? 0) })).filter((item) => item.text).sort(byOrder);
+const mapEquipment = (items: any): CatalogEquipment[] => (Array.isArray(items) ? items : []).map((item: AnyObj) => ({
+  name: String(item?.name ?? ""), type: item?.type === "OPTIONAL" ? "OPTIONAL" as const : "STANDARD" as const, description: String(item?.description ?? ""), sortOrder: Number(item?.sortOrder ?? 0),
+})).filter((item) => item.name).sort(byOrder);
 
 export async function getCatalogCategories(): Promise<CatalogCategory[]> {
   const path =
@@ -444,30 +480,17 @@ return items
 /**
  * ✅ Products: image (multi) + category_product relation
  */
-export async function getCatalogProducts(): Promise<any[]> {
-  const path =
-    "/api/products" +
-    "?sort=order:asc" +
-    "&sort=createdAt:desc" +
-    "&pagination[page]=1" +
-    "&pagination[pageSize]=200" +
-    "&filters[isActive][$eq]=true" +
-    "&populate[0]=image" +
-    "&populate[1]=category_product" +
-    "&fields[0]=title" +
-    "&fields[1]=slug" +
-    "&fields[2]=shortDescription" +
-    "&fields[3]=description" +
-    "&fields[4]=featured" +
-    "&fields[5]=order" +
-    "&fields[6]=createdAt" +
-    "&fields[7]=bullets" +
-    "&fields[8]=specs";
+export async function getCatalogProducts(): Promise<CatalogProduct[]> {
+  const path = "/api/products?sort[0]=order:asc&sort[1]=createdAt:desc&pagination[pageSize]=200&filters[isActive][$eq]=true" +
+    "&populate[mainImage][fields][0]=url&populate[image][fields][0]=url" +
+    "&populate[category_product][fields][0]=slug&populate[category_product][fields][1]=title" +
+    "&populate[technicalSpecifications]=*&populate[features]=*&populate[applications]=*&populate[equipment]=*" +
+    "&populate[variants][populate][specifications]=*&populate[variants][populate][equipment]=*";
 
   const res = await strapiFetch<any>(path, { next: { revalidate: 300 } });
   const items = unwrapCollection(res);
 
-  return items.map((x: AnyObj) => {
+  return items.map((x: AnyObj): CatalogProduct => {
     const cat = unwrapRelation(x?.category_product);
     const categoryKey = String(cat?.slug ?? cat?.key ?? "");
 
@@ -476,7 +499,8 @@ export async function getCatalogProducts(): Promise<any[]> {
       .map((m: any) => getMediaUrl(m))
       .filter((u): u is string => typeof u === "string" && u.length > 0);
 
-    const primaryImg = imageUrls[0] || mediaUrl(x?.imageUrl) || "";
+    const mainImage = getMediaUrl(x?.mainImage);
+    const primaryImg = mainImage || imageUrls[0] || "";
 
     return {
       id: String(x?.id ?? x?.documentId ?? ""),
@@ -486,19 +510,23 @@ export async function getCatalogProducts(): Promise<any[]> {
       description: x?.description || "",
       category: categoryKey || "other",
       featured: !!x?.featured,
-      createdAtISO: x?.createdAt
-        ? new Date(x.createdAt).toISOString()
-        : new Date().toISOString(),
       imageUrls,
       primaryImg,
-      image: primaryImg,
-      bullets: normalizeStringArray(x?.bullets),
-      specs: normalizeStringArray(x?.specs),
+      manufacturer: String(x?.manufacturer ?? ""),
+      model: String(x?.model ?? ""),
+      productType: String(x?.productType ?? ""),
+      technicalSpecifications: mapSpecifications(x?.technicalSpecifications),
+      features: mapTextItems(x?.features),
+      applications: mapTextItems(x?.applications),
+      equipment: mapEquipment(x?.equipment),
+      variants: (Array.isArray(x?.variants) ? x.variants : []).map((variant: AnyObj): CatalogVariant => ({
+        name: String(variant?.name ?? ""), description: String(variant?.description ?? ""), sortOrder: Number(variant?.sortOrder ?? 0), specifications: mapSpecifications(variant?.specifications), equipment: mapEquipment(variant?.equipment),
+      })).filter((variant: CatalogVariant) => variant.name).sort(byOrder),
     };
   });
 }
 
-export async function getCatalogProductBySlug(slug: string): Promise<any | null> {
+export async function getCatalogProductBySlug(slug: string): Promise<CatalogProduct | null> {
   const products = await getCatalogProducts();
   return products.find((product) => product.slug === slug) ?? null;
 }
