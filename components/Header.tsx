@@ -7,7 +7,6 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const navItems = [
   { label: "Ana Sayfa", href: "/main" },
-  { label: "Firmanıza Özel Ürünler", href: "/custom-products" },
   { label: "Blog", href: "/blog" },
   { label: "Hakkımızda", href: "/about" },
   { label: "İletişim", href: "/contact" },
