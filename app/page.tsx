@@ -1,127 +1,63 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import type { Viewport } from "next";
-import HeroSlider from "@/components/main/HeroSlider";
-import QuickLinksSection from "@/components/main/QuickLinksSection";
-import GrayBannerSlider from "@/components/main/GrayBannerSlider";
-import HowItWorksVideo from "@/components/main/HowItWorksVideo";
-import FaqAccordion from "@/components/main/FaqAccordion";
-import ClosingCtaSection from "@/components/main/ClosingCtaSection";
-import { getMainPage, renderBlocks } from "@/lib/strapi";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Box, DraftingCompass, Factory, ImageIcon, Layers3 } from "lucide-react";
+import { getCatalogCategories, getCatalogProducts, getCategoryTitle, getMediaUrl, getPosts, getRepresentatives, type CatalogProduct, type StrapiPost } from "@/lib/strapi";
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+export const metadata: Metadata = {
+  title: "Endüstriyel Teknoloji, Ölçüm ve Üretim Çözümleri",
+  description: "Kesiolabs; endüstriyel teknik ürünler, ölçüm çözümleri, 3D baskı, prototipleme ve özel ürün geliştirme alanlarında işletmelere çözüm sunar.",
+  alternates: { canonical: "/" },
+  openGraph: { title: "Kesiolabs | Endüstriyel Teknoloji ve Üretim Çözümleri", description: "Teknik ürün kataloğu, endüstriyel çözümler ve dijital üretim kabiliyetleri.", url: "/", type: "website" },
 };
 
-export default async function HomePage() {
-  const data = await getMainPage();
+const capabilities = [
+  { icon: Factory, title: "Endüstriyel Ürün ve Sistem Tedariği", description: "Teknik gereksinimlerinize uygun ürün ve ekipmanları, doğru uygulama odağıyla bir araya getiriyoruz.", href: "/products" },
+  { icon: Layers3, title: "3D Baskı ve Prototipleme", description: "Dijital modelden fiziksel prototipe uzanan süreçte malzeme ve üretim seçeneklerini değerlendiriyoruz.", href: "/quote" },
+  { icon: DraftingCompass, title: "Özel Ürün Geliştirme ve Üretim", description: "Kurumsal ihtiyaçlara özel ürünleri tasarım, numune ve üretim adımlarıyla hayata geçiriyoruz.", href: "/custom-products" },
+] as const;
+const articleLabels: Record<NonNullable<StrapiPost["articleType"]>, string> = { article: "Makale", news: "Haber", "application-note": "Uygulama Notu" };
+const formatDate = (value?: string) => value ? new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value)) : "";
 
-  if (!data) {
-    return (
-      <main className="min-h-screen bg-[#0b1120] flex items-center justify-center px-6">
-        <div className="text-center bg-white/[0.02] p-8 border border-white/10 rounded-2xl backdrop-blur-sm">
-          <h1 className="text-xl font-semibold text-white">İçerik Alınamadı</h1>
-          <p className="mt-2 text-slate-400 text-sm">
-            Strapi endpoint veya token ayarlarını kontrol edin.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const heroBanners = data.heroBanners || [];
-  const quickLinks = data.quickLinks || [];
-  const white = data.whiteSection;
-  const grayBanners = data.grayBanners || [];
-  const how = data.howItWorks;
-  const faqs = data.faqs || [];
-  const closingCta = data.closingCta;
-
-  return (
-    <main className="min-h-screen bg-[#0b1120] font-sans selection:bg-indigo-500/30 overflow-hidden">
-
-      {/* A) HERO SLIDER */}
-      <div className="relative z-20">
-        <HeroSlider banners={heroBanners} />
-      </div>
-
-      {/* B) HIZLI YÖNLENDİRME KARTLARI */}
-      <QuickLinksSection items={quickLinks} />
-
-      {/* C) HAKKIMIZDA / VİZYON BÖLÜMÜ */}
-      <section className="relative z-10 py-20 md:py-32">
-        <div className="absolute top-1/2 left-0 w-[600px] h-[400px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 -translate-x-1/2" />
-
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          {white ? (
-            <div className="grid lg:grid-cols-12 gap-12 items-center">
-
-              <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-semibold tracking-wide">
-                  <Zap className="w-4 h-4" />
-                  KesioLabs Vizyonu
-                </div>
-
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-md">
-                  {white.title}
-                </h2>
-
-                <div className="prose prose-invert prose-slate max-w-none text-slate-400 text-[15px] md:text-[17px] leading-relaxed [&_p]:mb-4">
-                  {renderBlocks(white.description)}
-                </div>
-
-                {white.buttonText && white.buttonLink ? (
-                  <div className="pt-4">
-                    <Link
-                      href={white.buttonLink}
-                      className="group inline-flex items-center gap-3 rounded-full bg-indigo-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-500 hover:-translate-y-1 transition-all duration-300"
-                    >
-                      {white.buttonText}
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="hidden lg:block lg:col-span-5 relative">
-                <div className="w-full aspect-square rounded-full border border-white/5 bg-gradient-to-tr from-white/[0.02] to-transparent backdrop-blur-sm animate-pulse-slow relative flex items-center justify-center">
-                   <div className="w-2/3 h-2/3 rounded-full border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-md flex items-center justify-center">
-                     <span className="text-indigo-400/50 font-bold text-6xl tracking-tighter mix-blend-overlay">KL</span>
-                   </div>
-                </div>
-              </div>
-
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      {/* D) ÜRÜN/KAMPANYA VİTRİNİ (GRAY BANNERS) */}
-      <section className="relative z-10 border-y border-white/5 bg-black/20">
-        <GrayBannerSlider banners={grayBanners} />
-      </section>
-
-      {/* E) NASIL ÇALIŞIR (VİDEO) */}
-      {how ? (
-        <HowItWorksVideo
-          title={how.title}
-          description={how.description}
-          video={how.video}
-          posterImage={how.posterImage}
-        />
-      ) : null}
-
-      {/* F) FAQ */}
-      <section className="relative z-10 py-20 bg-gradient-to-b from-transparent to-black/40">
-        <FaqAccordion faqs={faqs} />
-      </section>
-
-      {/* G) KAPANIŞ CTA */}
-      <ClosingCtaSection data={closingCta} />
-
-    </main>
-  );
+function ProductVisual({ product, priority = false }: { product: CatalogProduct; priority?: boolean }) {
+  return product.primaryImg ? <Image src={product.primaryImg} alt={product.title} fill priority={priority} sizes="(min-width:1280px) 42vw,(min-width:768px) 50vw,100vw" className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.025]" /> : <div className="flex h-full flex-col items-center justify-center gap-4 text-black/35"><ImageIcon className="h-10 w-10 stroke-[1.2]" /><span className="text-xs font-bold uppercase tracking-[0.16em]">Ürün Görseli Yakında</span></div>;
 }
+
+function ProductCard({ product, category }: { product: CatalogProduct; category: string }) {
+  return <article className="group flex flex-col border border-black/10 bg-white"><Link href={`/products/${product.slug}`} className="relative aspect-square overflow-hidden bg-black/[0.025]"><ProductVisual product={product} /></Link><div className="flex flex-1 flex-col p-6"><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#DA291C]">{category}</p>{product.manufacturer && <p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-black/40">{product.manufacturer}</p>}<h3 className="mt-2 text-xl font-bold tracking-[-0.025em]">{product.model || product.title}</h3><p className="mt-3 text-sm leading-6 text-black/60">{product.productType || product.shortDescription}</p>{product.technicalSpecifications.length > 0 && <dl className="mt-5 space-y-2 border-t border-black/10 pt-4">{product.technicalSpecifications.slice(0, 2).map(spec => <div key={`${spec.group}-${spec.label}`} className="flex justify-between gap-3 text-xs"><dt className="text-black/45">{spec.label}</dt><dd className="text-right font-semibold">{spec.value}{spec.unit ? ` ${spec.unit}` : ""}</dd></div>)}</dl>}<Link href={`/products/${product.slug}`} className="mt-6 inline-flex items-center justify-between border-t border-black/10 pt-4 text-sm font-bold hover:text-[#DA291C]">Detayları İncele <ArrowUpRight className="h-4 w-4" /></Link></div></article>;
+}
+
+export default async function HomePage() {
+  const [categories, products, representatives, posts] = await Promise.all([getCatalogCategories().catch(() => []), getCatalogProducts().catch(() => []), getRepresentatives().catch(() => []), getPosts().catch(() => [])]);
+  const categoryNames = new Map(categories.map(item => [item.key, item.label]));
+  const featuredProducts = [...products.filter(item => item.featured), ...products.filter(item => !item.featured)].slice(0, 3);
+  const featuredTechnology = products.find(item => item.featured) ?? products[0];
+  const latestPosts = posts.slice(0, 3);
+
+  return <main className="overflow-hidden bg-white text-black">
+    <section className="relative isolate min-h-[calc(100svh-76px)] border-b border-black/10 bg-[#F7F7F5] lg:min-h-[72vh]">
+      <div className="absolute inset-y-0 right-0 hidden w-[42%] bg-black lg:block" />
+      <div className="relative mx-auto grid min-h-[inherit] max-w-[1440px] lg:grid-cols-[58%_42%]">
+        <div className="flex items-center px-6 py-20 sm:px-10 lg:px-12 lg:py-24 xl:px-20"><div className="max-w-3xl"><div className="mb-8 flex items-center gap-4"><span className="h-px w-12 bg-[#DA291C]" /><p className="text-xs font-bold uppercase tracking-[0.22em] text-black/55">Kesiolabs endüstriyel çözümler</p></div><h1 className="text-[clamp(2.9rem,6vw,6.4rem)] font-bold leading-[0.94] tracking-[-0.065em]">Endüstriyel teknoloji,<span className="block text-[#DA291C]">ölçüm ve üretim</span>çözümleri.</h1><p className="mt-8 max-w-2xl text-base leading-7 text-black/62 md:text-lg md:leading-8">Teknik ürünleri, laboratuvar ve endüstriyel uygulamaları; dijital üretim ve prototipleme kabiliyetleriyle aynı çözüm yaklaşımında buluşturuyoruz.</p><div className="mt-10 flex flex-col gap-3 sm:flex-row"><Link href="/products" className="inline-flex items-center justify-center gap-3 bg-[#DA291C] px-7 py-4 text-sm font-bold text-white hover:bg-black">Ürünleri İncele <ArrowRight className="h-4 w-4" /></Link><Link href="/contact" className="inline-flex items-center justify-center gap-3 border border-black/20 px-7 py-4 text-sm font-bold hover:bg-black hover:text-white">İletişime Geçin <ArrowUpRight className="h-4 w-4" /></Link></div></div></div>
+        <div className="group relative min-h-[420px] overflow-hidden bg-black lg:min-h-full">{featuredTechnology?.primaryImg ? <Image src={featuredTechnology.primaryImg} alt={featuredTechnology.title} fill priority sizes="(min-width:1024px) 42vw,100vw" className="object-cover opacity-90 transition-transform duration-1000 group-hover:scale-[1.015]" /> : <div className="absolute inset-0"><div className="absolute inset-8 border border-white/10" /><div className="absolute inset-x-8 top-1/2 border-t border-white/15" /><div className="absolute inset-y-8 left-1/2 border-l border-white/15" /><Box className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 stroke-[0.7] text-white/30" /></div>}<div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/10" />{featuredTechnology && <Link href={`/products/${featuredTechnology.slug}`} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-5 border-t border-white/20 bg-black/75 p-7 text-white backdrop-blur-sm"><div><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#B7B7B7]">Öne çıkan teknoloji</p><p className="mt-2 text-xl font-bold">{featuredTechnology.model || featuredTechnology.title}</p></div><ArrowUpRight className="h-5 w-5 text-[#DA291C]" /></Link>}</div>
+      </div>
+    </section>
+
+    <section className="mx-auto max-w-7xl px-6 py-20 md:py-28"><SectionHeading eyebrow="Ürün kataloğu" title="Ürün Grupları" href="/products" link="Tüm ürünleri görüntüle" />{categories.length ? <div className={`mt-8 grid gap-5 ${categories.length === 1 ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"}`}>{categories.map(category => { const count = products.filter(item => item.category === category.key).length; return <Link key={category.key} href={`/products?category=${encodeURIComponent(category.key)}`} className={`group relative isolate overflow-hidden bg-black text-white ${categories.length === 1 ? "min-h-[390px]" : "min-h-[290px]"}`}>{category.image ? <Image src={category.image} alt="" fill sizes={categories.length === 1 ? "100vw" : "33vw"} className="object-cover opacity-55 transition duration-700 group-hover:scale-[1.025]" /> : <div className="absolute inset-8 border border-white/15" />}<div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" /><div className="relative flex min-h-[inherit] flex-col justify-end p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#B7B7B7]">{count} ürün</p><div className="mt-3 flex items-end justify-between gap-5"><div><h3 className="text-3xl font-bold tracking-[-0.03em]">{category.label}</h3>{category.description && <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">{category.description}</p>}</div><ArrowUpRight className="h-6 w-6 shrink-0 text-[#DA291C]" /></div></div></Link>; })}</div> : <Empty text="Yayınlanan ürün grupları burada görüntülenecek." />}</section>
+
+    <section className="border-y border-black/10 bg-[#F7F7F5] px-6 py-20 md:py-28"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow="Seçili çözümler" title="Öne Çıkan Ürünler" /><p className="mt-5 max-w-xl text-sm leading-6 text-black/55">Öne çıkan teknik ürünleri ve uygulama odaklı çözümleri inceleyin.</p>{featuredProducts.length ? <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{featuredProducts.map(product => <ProductCard key={product.id} product={product} category={categoryNames.get(product.category) ?? "Endüstriyel ürün"} />)}</div> : <Empty text="Öne çıkan ürünler CMS üzerinden yayınlandığında burada görüntülenecek." />}</div></section>
+
+    <section className="bg-black px-6 py-20 text-white md:py-28"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[.85fr_1.15fr]"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Kesiolabs kabiliyetleri</p><h2 className="mt-4 text-4xl font-bold tracking-[-0.045em] md:text-5xl">Üründen üretime, tek çözüm yaklaşımı.</h2><p className="mt-6 text-sm leading-7 text-[#B7B7B7]">Endüstriyel ürün tedariğini, prototipleme ve özel üretim kabiliyetleriyle tamamlıyoruz.</p></div><div className="divide-y divide-white/15 border-y border-white/15">{capabilities.map(({ icon: Icon, ...item }, index) => <article key={item.title} className="grid gap-5 py-7 sm:grid-cols-[52px_1fr_auto]"><div className="flex h-11 w-11 items-center justify-center border border-white/20 text-[#DA291C]"><Icon className="h-5 w-5" /></div><div><p className="text-[10px] font-bold tracking-[0.18em] text-white/35">0{index + 1}</p><h3 className="mt-2 text-xl font-bold">{item.title}</h3><p className="mt-3 text-sm leading-6 text-[#B7B7B7]">{item.description}</p></div><Link href={item.href} className="flex h-10 w-10 items-center justify-center border border-white/20 hover:border-[#DA291C] hover:bg-[#DA291C]" aria-label={item.title}><ArrowRight className="h-4 w-4" /></Link></article>)}</div></div></section>
+
+    {featuredTechnology && <section className="mx-auto grid max-w-7xl px-6 py-20 md:py-28 lg:grid-cols-2"><div className="group relative aspect-square overflow-hidden bg-black/[0.035] lg:aspect-auto lg:min-h-[590px]"><ProductVisual product={featuredTechnology} priority /></div><div className="flex flex-col justify-center border border-black/10 p-8 md:p-12 lg:p-16"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Öne çıkan teknoloji</p><p className="mt-8 text-xs font-bold uppercase tracking-[0.14em] text-black/40">{categoryNames.get(featuredTechnology.category) ?? "Endüstriyel ürün"}{featuredTechnology.manufacturer ? ` · ${featuredTechnology.manufacturer}` : ""}</p><h2 className="mt-4 text-4xl font-bold tracking-[-0.045em] md:text-5xl">{featuredTechnology.model || featuredTechnology.title}</h2><p className="mt-3 font-semibold text-black/65">{featuredTechnology.productType}</p><p className="mt-6 text-sm leading-7 text-black/60">{featuredTechnology.shortDescription}</p>{featuredTechnology.technicalSpecifications.length > 0 && <dl className="mt-8 divide-y divide-black/10 border-y border-black/10">{featuredTechnology.technicalSpecifications.slice(0, 4).map(spec => <div key={`${spec.group}-${spec.label}`} className="grid grid-cols-[1fr_1.2fr] gap-5 py-4 text-sm"><dt className="text-black/45">{spec.label}</dt><dd className="font-semibold">{spec.value}{spec.unit ? ` ${spec.unit}` : ""}</dd></div>)}</dl>}<Link href={`/products/${featuredTechnology.slug}`} className="mt-9 inline-flex w-fit items-center gap-3 bg-[#DA291C] px-6 py-4 text-sm font-bold text-white hover:bg-black">Ürünü İncele <ArrowRight className="h-4 w-4" /></Link></div></section>}
+
+    {representatives.length > 0 && <section className="border-y border-black/10 bg-[#F7F7F5] px-6 py-16"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow="Teknoloji ağı" title="Temsilcilikler" href="/temsilcilikler" link="Tüm Temsilcilikleri Gör" /><div className="mt-8 grid grid-cols-2 border-l border-t border-black/10 md:grid-cols-3 lg:grid-cols-5">{representatives.slice(0, 10).map(item => <div key={item.id} className="flex min-h-32 items-center justify-center border-b border-r border-black/10 bg-white p-5">{item.logo ? <Image src={item.logo} alt={`${item.name} logo`} width={180} height={80} className="max-h-14 w-auto object-contain" /> : <span className="text-center text-sm font-bold text-black/55">{item.name}</span>}</div>)}</div></div></section>}
+
+    <section className="mx-auto max-w-7xl px-6 py-20 md:py-28"><SectionHeading eyebrow="Bilgi merkezi" title="Son Makaleler" href="/makaleler" link="Tüm Makaleleri Gör" />{latestPosts.length ? <div className="mt-9 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{latestPosts.map(post => { const image = getMediaUrl(post.coverImage); return <article key={post.id} className="group flex flex-col border border-black/10"><Link href={`/makaleler/${post.slug}`} className="relative aspect-[16/10] overflow-hidden bg-black/[0.035]">{image ? <Image src={image} alt={post.title} fill sizes="(min-width:1024px) 33vw,100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.025]" /> : <div className="flex h-full items-center justify-center"><ImageIcon className="h-9 w-9 text-black/25" /></div>}</Link><div className="flex flex-1 flex-col p-6"><div className="flex justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.13em]"><span className="text-[#DA291C]">{post.articleType ? articleLabels[post.articleType] : "Makale"}</span><time className="text-black/40">{formatDate(post.date)}</time></div><p className="mt-3 text-xs font-semibold text-black/40">{getCategoryTitle(post.category)}</p><h3 className="mt-3 text-xl font-bold leading-tight"><Link href={`/makaleler/${post.slug}`} className="hover:text-[#DA291C]">{post.title}</Link></h3><p className="mt-4 line-clamp-3 flex-1 text-sm leading-6 text-black/60">{post.excerpt}</p><Link href={`/makaleler/${post.slug}`} className="mt-6 inline-flex items-center justify-between border-t border-black/10 pt-4 text-sm font-bold">Devamını Oku <ArrowUpRight className="h-4 w-4 text-[#DA291C]" /></Link></div></article>; })}</div> : <Empty text="Yayınlanan makaleler burada görüntülenecek." />}</section>
+
+    <section className="px-6 pb-20 md:pb-28"><div className="mx-auto max-w-7xl bg-[#DA291C] px-7 py-14 text-white md:px-14 md:py-16"><div className="flex flex-col justify-between gap-10 lg:flex-row lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-white/70">Birlikte çalışalım</p><h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-[-0.045em] md:text-5xl">Projenizi veya ürün ihtiyacınızı konuşalım.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-white/80">Teknik gereksiniminizi paylaşın; doğru ürün, prototip veya özel üretim yaklaşımını birlikte değerlendirelim.</p></div><div className="flex shrink-0 flex-col gap-3 sm:flex-row"><Link href="/contact" className="inline-flex items-center justify-center gap-3 bg-white px-6 py-4 text-sm font-bold text-black hover:bg-black hover:text-white">İletişime Geçin <ArrowUpRight className="h-4 w-4" /></Link><Link href="/products" className="inline-flex items-center justify-center gap-3 border border-white/40 px-6 py-4 text-sm font-bold hover:bg-white hover:text-black">Ürünleri İncele <ArrowRight className="h-4 w-4" /></Link></div></div></div></section>
+  </main>;
+}
+
+function SectionHeading({ eyebrow, title, href, link }: { eyebrow: string; title: string; href?: string; link?: string }) { return <div className="flex flex-col justify-between gap-6 border-b border-black/10 pb-7 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">{eyebrow}</p><h2 className="mt-4 text-4xl font-bold tracking-[-0.045em] md:text-5xl">{title}</h2></div>{href && link && <Link href={href} className="inline-flex items-center gap-2 text-sm font-bold hover:text-[#DA291C]">{link} <ArrowRight className="h-4 w-4" /></Link>}</div>; }
+function Empty({ text }: { text: string }) { return <div className="mt-9 border border-dashed border-[#B7B7B7] px-6 py-14 text-center text-sm text-black/55">{text}</div>; }
