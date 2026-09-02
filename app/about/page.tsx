@@ -1,209 +1,66 @@
-// app/about/page.tsx
-import Image from "next/image";
-import { Cpu, Target, Users } from "lucide-react";
-import { getAboutPage, mediaUrl } from "@/lib/strapi";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight, Box, DraftingCompass, Factory, Layers3 } from "lucide-react";
 
-type NormalizedMedia = {
-  url: string;
-  alternativeText?: string | null;
-  width?: number | null;
-  height?: number | null;
+export const metadata: Metadata = {
+  title: "Hakkımızda",
+  description: "Kesiolabs; endüstriyel teknik ürünleri, dijital üretim kabiliyetlerini ve ürün geliştirme yaklaşımını aynı çözüm yapısında buluşturur.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "Kesiolabs Hakkında | Endüstriyel Teknoloji ve Üretim",
+    description: "Endüstriyel teknoloji, teknik ürün çözümleri, dijital üretim ve ürün geliştirme yaklaşımımızı keşfedin.",
+    url: "/about",
+    type: "website",
+  },
 };
 
-// --- VERİ DÜZENLEME FONKSİYONLARI ---
-function normalizeMedia(input: any): NormalizedMedia | null {
-  if (!input) return null;
-  if (typeof input?.url === "string") return { url: input.url, alternativeText: input.alternativeText ?? null, width: input.width ?? null, height: input.height ?? null };
-  if (typeof input?.data?.url === "string") return { url: input.data.url, alternativeText: input.data.alternativeText ?? null, width: input.data.width ?? null, height: input.data.height ?? null };
-  const v4attrs = input?.data?.attributes;
-  if (v4attrs?.url) return { url: v4attrs.url, alternativeText: v4attrs.alternativeText ?? null, width: v4attrs.width ?? null, height: v4attrs.height ?? null };
-  const v4arr0 = Array.isArray(input?.data) ? input.data[0]?.attributes : null;
-  if (v4arr0?.url) return { url: v4arr0.url, alternativeText: v4arr0.alternativeText ?? null, width: v4arr0.width ?? null, height: v4arr0.height ?? null };
-  const attrs = input?.attributes;
-  if (attrs?.url) return { url: attrs.url, alternativeText: attrs.alternativeText ?? null, width: attrs.width ?? null, height: attrs.height ?? null };
-  if (typeof input === "string" && input.includes("/")) return { url: input, alternativeText: null, width: null, height: null };
-  return null;
-}
+const activities = [
+  {
+    icon: Factory,
+    title: "Endüstriyel Ürünler ve Teknik Çözümler",
+    description: "Endüstriyel ve laboratuvar uygulamalarına yönelik teknik ürün ve ekipman ihtiyaçlarını, kullanım amacı ve teknik gereksinimler doğrultusunda değerlendiriyoruz.",
+  },
+  {
+    icon: Layers3,
+    title: "Dijital Üretim ve Prototipleme",
+    description: "3D baskı, prototip üretimi ve tekrarlanabilir üretim süreçlerinde malzeme, geometri ve üretilebilirlik gereksinimlerini birlikte ele alıyoruz.",
+  },
+  {
+    icon: DraftingCompass,
+    title: "Ürün Geliştirme ve Özel Üretim",
+    description: "Proje özelindeki ihtiyacı tasarım geliştirme, numune, üretim hazırlığı ve uygulamaya uygun çözüm adımlarıyla ilerletiyoruz.",
+  },
+] as const;
 
-function textFromBlocks(blocks: any): string[] {
-  if (!Array.isArray(blocks)) return [];
-  const paras: string[] = [];
-  for (const node of blocks) {
-    if (node?.type === "paragraph" && Array.isArray(node.children)) {
-      const t = node.children.map((c: any) => c?.text || "").join("");
-      const trimmed = (t || "").trim();
-      if (trimmed) paras.push(trimmed);
-    }
-  }
-  return paras;
-}
+const considerations = ["Kullanım amacı", "Teknik gereksinimler", "Üretilebilirlik", "Malzeme ve süreç seçimi", "Tekrarlanabilirlik", "Kalite ve proje kısıtları"];
 
-// --- YENİ EKRAN TASARIMI (UI) ---
-export default async function AboutPage() {
-  const result = await getAboutPage();
+const principles = [
+  { number: "01", title: "Teknik Netlik", description: "İhtiyacı, kısıtları ve beklenen sonucu üretim veya ürün seçimi başlamadan önce açık biçimde tanımlarız." },
+  { number: "02", title: "Üretilebilirlik", description: "Tasarım ve teknik kararları yalnızca görünüşe göre değil, uygulanabilir ve sürdürülebilir üretime göre değerlendiririz." },
+  { number: "03", title: "Tutarlılık", description: "Numuneden tekrarlı üretime kadar süreçlerin ölçülebilir ve yeniden uygulanabilir olmasına önem veririz." },
+  { number: "04", title: "Şeffaf İletişim", description: "Teknik seçenekleri, sınırlamaları ve proje adımlarını anlaşılır biçimde paylaşırız." },
+] as const;
 
-  if (!result.ok || !result.data) {
-    return (
-      <div className="mx-auto max-w-4xl px-6 py-24 text-white">
-        <h1 className="text-3xl font-semibold text-rose-500">Sayfa verileri yüklenemedi.</h1>
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-6 text-sm font-mono">
-          <div>Status: {result.status}</div>
-          <div>URL: {result.url}</div>
-        </div>
-      </div>
-    );
-  }
+export default function AboutPage() {
+  return <main className="overflow-hidden bg-white text-black">
+    <section className="relative border-b border-black/10 bg-[#F7F7F5] px-6 py-20 md:py-28 lg:py-32">
+      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] border-l border-black/[0.06] lg:block" aria-hidden="true"><div className="absolute inset-x-0 top-1/3 border-t border-black/[0.055]" /><div className="absolute inset-x-0 top-2/3 border-t border-black/[0.055]" /><div className="absolute inset-y-0 left-1/2 border-l border-black/[0.055]" /><Box className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 stroke-[0.55] text-black/20" /></div>
+      <div className="relative mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.24em] text-[#DA291C]">Kesiolabs</p><h1 className="mt-7 max-w-5xl text-[clamp(2.75rem,5.3vw,4.75rem)] font-bold leading-[0.98] tracking-[-0.055em]">Teknoloji, tasarım ve üretimi <span className="text-[#DA291C]">aynı çözüm yaklaşımında</span> buluşturuyoruz.</h1><p className="mt-8 max-w-3xl text-base leading-8 text-black/62 md:text-lg">Kesiolabs; endüstriyel ve laboratuvar uygulamalarına yönelik teknik ürünleri, dijital üretim kabiliyetlerini ve ürün geliştirme yaklaşımını aynı yapı altında bir araya getirir.</p></div>
+    </section>
 
-  const a = result.data;
-  const heroD = normalizeMedia(a.heroImageDesktop);
-  const heroM = normalizeMedia(a.heroImageMobile);
-  const midD = normalizeMedia(a.midImageDesktop);
-  const midM = normalizeMedia(a.midImageMobile);
+    <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20" aria-labelledby="positioning-title">
+      <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Kesiolabs ne yapar?</p><h2 id="positioning-title" className="mt-5 text-4xl font-bold leading-[1.04] tracking-[-0.045em] md:text-5xl">Tek bir üretim yöntemine değil, doğru çözüme odaklanıyoruz.</h2></div>
+      <div className="space-y-6 border-l border-black/10 pl-7 text-base leading-8 text-black/62 md:pl-10 md:text-lg"><p>Her ürün ve proje aynı yöntemle çözülemez. Bu nedenle önce kullanım amacını, teknik gereksinimleri ve uygulama koşullarını değerlendiriyoruz.</p><p>İhtiyaca göre teknik ürün tedariği, endüstriyel veya laboratuvar ekipmanı, dijital üretim, prototipleme ya da özel ürün geliştirme seçeneklerinden uygun olanı belirliyoruz.</p><p>Amacımız belirli bir yöntemi öne çıkarmak değil; ürün, teknoloji ve üretim kararlarını aynı teknik çerçevede buluşturmaktır.</p></div>
+    </section>
 
-  const heroDUrl = heroD ? mediaUrl(heroD.url) ?? "" : "";
-  const heroMUrl = heroM ? mediaUrl(heroM.url) ?? "" : "";
-  const midDUrl = midD ? mediaUrl(midD.url) ?? "" : "";
-  const midMUrl = midM ? mediaUrl(midM.url) ?? "" : "";
+    <section className="border-y border-black/10 bg-[#F7F7F5] px-6 py-20 md:py-28" aria-labelledby="activities-title"><div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Çözüm kapsamı</p><h2 id="activities-title" className="mt-4 text-4xl font-bold tracking-[-0.045em] md:text-5xl">Faaliyet Alanlarımız</h2><div className="mt-12 divide-y divide-black/10 border-y border-black/10">{activities.map(({ icon: Icon, ...item }, index) => <article key={item.title} className="grid gap-5 py-8 md:grid-cols-[80px_1fr_1.15fr] md:items-start md:gap-10"><div className="flex items-center gap-4"><span className="text-xs font-bold text-[#DA291C]">0{index + 1}</span><Icon className="h-5 w-5 stroke-[1.5] text-black/45" /></div><h3 className="text-xl font-bold leading-tight md:text-2xl">{item.title}</h3><p className="text-sm leading-7 text-black/58 md:text-base">{item.description}</p></article>)}</div></div></section>
 
-  const body1Paras = textFromBlocks(a.body1);
-  const team = Array.isArray(a.team) ? a.team : [];
+    <section className="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:py-28 lg:grid-cols-[1.05fr_.95fr] lg:gap-20" aria-labelledby="approach-title"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Yaklaşımımız</p><h2 id="approach-title" className="mt-5 max-w-3xl text-4xl font-bold leading-[1.04] tracking-[-0.045em] md:text-5xl">Tasarım bizim için yalnızca nasıl göründüğü değil, nasıl çalıştığı ve nasıl üretildiğidir.</h2><p className="mt-7 max-w-2xl text-base leading-8 text-black/60">Bir ürünün başarısını görünüş veya hız tek başına belirlemez. Teknik kararları kullanım, üretim ve proje gerçekleriyle birlikte değerlendiririz.</p></div><div className="grid grid-cols-2 border-l border-t border-black/10">{considerations.map((item, index) => <div key={item} className="min-h-32 border-b border-r border-black/10 p-5"><span className="text-[10px] font-bold tracking-[0.15em] text-[#DA291C]">{String(index + 1).padStart(2, "0")}</span><p className="mt-5 text-sm font-bold leading-5">{item}</p></div>)}</div></section>
 
-  return (
-    <main className="min-h-screen bg-[#0b1120] text-slate-300 font-sans pb-24 overflow-hidden">
-      
-      {/* 1. KAHRAMAN BÖLÜMÜ (HERO) */}
-      <section className="relative w-full h-[65vh] min-h-[500px] flex flex-col justify-center items-center px-6 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {heroDUrl && <Image src={heroDUrl} alt="Hero Desktop" fill className="object-cover hidden md:block" priority unoptimized />}
-          {heroMUrl && <Image src={heroMUrl} alt="Hero Mobile" fill className="object-cover md:hidden" priority unoptimized />}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0b1120]/60 via-[#0b1120]/80 to-[#0b1120]" />
-        </div>
+    <section className="bg-black px-6 py-20 text-white md:py-28" aria-labelledby="production-title"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Üretim kabiliyeti</p><h2 id="production-title" className="mt-5 text-4xl font-bold tracking-[-0.045em] text-white md:text-5xl">Dijital üretimi, ürün geliştirme sürecinin bir parçası olarak görüyoruz.</h2></div><div className="flex flex-col justify-between"><div className="space-y-5 text-base leading-8 text-[#B7B7B7]"><p>FDM üretim ve prototipleme kabiliyetimiz; tasarım doğrulama, numune üretimi, üretime hazırlık ve uygun projelerde tekrarlanabilir üretim için kullanılır.</p><p>Geometri, malzeme ve proses kararlarını üretilebilirlik bakışıyla değerlendirerek dijital modelden fiziksel ürüne kontrollü bir geçiş hedefleriz.</p></div><div className="mt-10 flex flex-wrap gap-3"><Link href="/quote" className="inline-flex items-center gap-3 bg-[#DA291C] px-6 py-4 text-sm font-bold text-white hover:bg-white hover:text-black">3D Baskı Teklifi Al <ArrowRight className="h-4 w-4" /></Link><Link href="/custom-products" className="inline-flex items-center gap-3 border border-white/25 px-6 py-4 text-sm font-bold text-white hover:border-white">Özel Üretimi İncele <ArrowUpRight className="h-4 w-4" /></Link></div></div></div></section>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center mt-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight drop-shadow-md">
-            {a.title || "Hakkımızda"}
-          </h1>
-          {a.intro1 && (
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-light">
-              {a.intro1}
-            </p>
-          )}
-        </div>
-      </section>
+    <section className="mx-auto max-w-7xl px-6 py-20 md:py-28" aria-labelledby="principles-title"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">Çalışma biçimi</p><h2 id="principles-title" className="mt-4 text-4xl font-bold tracking-[-0.045em] md:text-5xl">Çalışma Prensiplerimiz</h2></div><div className="mt-12 grid border-l border-t border-black/10 sm:grid-cols-2 lg:grid-cols-4">{principles.map(item => <article key={item.number} className="flex min-h-64 flex-col border-b border-r border-black/10 p-6"><span className="text-xs font-bold text-[#DA291C]">{item.number}</span><h3 className="mt-12 text-xl font-bold">{item.title}</h3><p className="mt-4 text-sm leading-6 text-black/58">{item.description}</p></article>)}</div></section>
 
-      {/* 2. ALTYAPI VE TEKNOLOJİ (Glassmorphism Kartı) */}
-      {a.intro2 && (
-        <section className="relative z-20 max-w-5xl mx-auto px-6 -mt-16 md:-mt-24 mb-24">
-          <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-md shadow-2xl flex flex-col md:flex-row gap-8 items-start">
-            <div className="shrink-0 p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-              <Cpu className="w-8 h-8 text-indigo-400" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-semibold text-white mb-4">Üretim Altyapımız</h3>
-              <p className="text-base md:text-lg text-slate-400 leading-relaxed">
-                {a.intro2}
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 3. PARALLAX GÖRSEL (Ayrıştırıcı Bant) */}
-      {(midDUrl || midMUrl) && (
-        <section className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden my-24 border-y border-white/5">
-          <div className="absolute inset-0 z-0">
-            {midDUrl && <Image src={midDUrl} alt="Mid Desktop" fill className="object-cover hidden md:block" unoptimized />}
-            {midMUrl && <Image src={midMUrl} alt="Mid Mobile" fill className="object-cover md:hidden" unoptimized />}
-            <div className="absolute inset-0 bg-[#0b1120]/70 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-[#0b1120]" />
-          </div>
-          
-          <h2 className="relative z-10 text-3xl md:text-5xl font-bold text-white tracking-wider text-center px-6 drop-shadow-2xl">
-            {a.midAlt || "Üretilebilir Tasarım Odaklı Çözümler"}
-          </h2>
-        </section>
-      )}
-
-      {/* 4. VİZYON VE YAKLAŞIM BÖLÜMÜ */}
-      <section className="max-w-4xl mx-auto px-6 mb-32 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col gap-10">
-          <div className="flex items-center gap-4 mb-4">
-            <Target className="w-8 h-8 text-indigo-400" />
-            <h3 className="text-3xl font-bold text-white">Yaklaşımımız ve Vizyonumuz</h3>
-          </div>
-          
-          <div className="space-y-8 text-[15px] md:text-[17px] leading-relaxed text-slate-400">
-            {body1Paras.map((p, idx) => (
-              <p key={idx} className="pl-6 border-l-2 border-indigo-500/30">
-                {p}
-              </p>
-            ))}
-            {a.body2 && (
-              <p className="pl-6 border-l-2 border-indigo-500/30">
-                {a.body2}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. EKİBİMİZ */}
-      {team.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col items-center justify-center mb-16 text-center">
-            <div className="p-3 bg-white/[0.03] rounded-2xl border border-white/10 mb-6">
-              <Users className="w-6 h-6 text-indigo-400" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              {a.teamTitle || "Ekibimiz"}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {team.map((m, idx) => {
-              const photoUrl = m.photo ? mediaUrl(normalizeMedia(m.photo)?.url) ?? "" : "";
-
-              return (
-                <div key={m.id ?? idx} className="group bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm hover:bg-white/[0.05] transition-all duration-300">
-                  {/* Fotoğraf Alanı */}
-                  <div className="relative w-full aspect-[4/5] bg-black/20 overflow-hidden border-b border-white/5">
-                    {photoUrl ? (
-                      <Image
-                        src={photoUrl}
-                        alt={m.name || "Ekip Üyesi"}
-                        fill
-                        className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-slate-600 font-mono text-sm">
-                        Fotoğraf Yok
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120]/60 via-transparent to-transparent opacity-80" />
-                  </div>
-
-                  {/* İsim ve Unvan */}
-                  <div className="p-6 pt-5">
-                    <h3 className="text-xl font-bold text-white">{m.name || "-"}</h3>
-                    <p className="text-sm font-medium text-indigo-400 mt-1">
-                      {m.role || m.title || ""}
-                    </p>
-                    {m.bio && (
-                      <p className="mt-4 text-sm leading-relaxed text-slate-400 line-clamp-3">
-                        {m.bio}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-    </main>
-  );
+    <section className="px-6 pb-20 md:pb-28"><div className="mx-auto max-w-7xl border-t-4 border-[#DA291C] bg-[#F7F7F5] px-7 py-14 md:px-14 md:py-16"><div className="flex flex-col justify-between gap-10 lg:flex-row lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#DA291C]">İletişim</p><h2 className="mt-4 max-w-3xl text-4xl font-bold tracking-[-0.045em] md:text-5xl">Teknik ihtiyacınızı birlikte değerlendirelim.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-black/60">İhtiyacınız endüstriyel bir ürün, prototip veya projeye özel üretim çözümü olabilir. Gereksinimlerinizi paylaşın, uygun yaklaşımı birlikte belirleyelim.</p></div><div className="flex shrink-0 flex-col gap-3 sm:flex-row"><Link href="/contact" className="inline-flex items-center justify-center gap-3 bg-[#DA291C] px-6 py-4 text-sm font-bold text-white hover:bg-black">İletişime Geçin <ArrowUpRight className="h-4 w-4" /></Link><Link href="/products" className="inline-flex items-center justify-center gap-3 border border-black/20 px-6 py-4 text-sm font-bold hover:bg-black hover:text-white">Ürünleri İncele <ArrowRight className="h-4 w-4" /></Link></div></div></div></section>
+  </main>;
 }
