@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import CustomProductsClient from "./CustomProductsClient";
-import { getCustomProductTypes, getMediaUrl } from "@/lib/strapi";
+import { getCustomProductTypes } from "@/lib/strapi";
+
+export const metadata: Metadata = {
+  title: "Firmanıza Özel Ürünler",
+  description: "Kurumsal ihtiyaçlarınıza özel ürün geliştirme ve üretim çözümleri için teklif alın.",
+  alternates: { canonical: "/custom-products" },
+};
 
 export default async function CustomProductsPage() {
   // ✅ Strapi'den çek

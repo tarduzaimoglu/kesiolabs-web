@@ -5,7 +5,7 @@ import { ArrowRight, ArrowUpRight, Box, DraftingCompass, Factory, ImageIcon, Lay
 import { getCatalogCategories, getCatalogProducts, getCategoryTitle, getMediaUrl, getPosts, getRepresentatives, type CatalogCategory, type CatalogProduct, type StrapiPost } from "@/lib/strapi";
 
 export const metadata: Metadata = {
-  title: "Endüstriyel Teknoloji, Ölçüm ve Üretim Çözümleri",
+  title: { absolute: "KesioLabs | Anasayfa" },
   description: "Kesiolabs; endüstriyel teknik ürünler, ölçüm çözümleri, 3D baskı, prototipleme ve özel ürün geliştirme alanlarında işletmelere çözüm sunar.",
   alternates: { canonical: "/" },
   openGraph: { title: "Kesiolabs | Endüstriyel Teknoloji ve Üretim Çözümleri", description: "Teknik ürün kataloğu, endüstriyel çözümler ve dijital üretim kabiliyetleri.", url: "/", type: "website" },

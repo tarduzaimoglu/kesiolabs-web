@@ -1,3 +1,7 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Online Mağaza", alternates: { canonical: "/shop" } };
+
 export default function ShopPage() {
   return (
     <main className="min-h-[calc(100vh-80px)] bg-white">

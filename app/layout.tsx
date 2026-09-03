@@ -8,7 +8,7 @@ import { getCatalogCategories } from "@/lib/strapi";
 
 export const metadata = {
   metadataBase: new URL("https://www.kesiolabs.com"),
-  title: { default: "Kesiolabs", template: "%s | Kesiolabs" },
+  title: { default: "KesioLabs | Anasayfa", template: "KesioLabs | %s" },
   description: "Dijital üretim, 3D baskı ve endüstriyel teknoloji çözümleri.",
 };
 
