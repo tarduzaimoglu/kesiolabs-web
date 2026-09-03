@@ -700,29 +700,42 @@ export async function getQuotePage(): Promise<any | null> {
    ABOUT PAGE
 ---------------------------------------- */
 
-export type AboutTeamMember = {
+export type AboutOrderedItem = {
   id?: number;
-  name?: string;
-  role?: string;
-  title?: string;
-  bio?: string;
-  photo?: any;
+  order?: number;
+  title: string;
+  description?: string | null;
 };
 
 export type AboutPageData = {
-  title?: string;
-  intro1?: string;
-  intro2?: string;
-  body2?: string;
-  heroImageDesktop?: any;
-  heroImageMobile?: any;
-  midImageDesktop?: any;
-  midImageMobile?: any;
-  heroAlt?: string;
-  midAlt?: string;
-  teamTitle?: string;
-  team?: AboutTeamMember[];
-  body1?: any;
+  heroEyebrow?: string;
+  heroTitle?: string;
+  heroDescription?: string;
+  heroImage?: any;
+  positioningEyebrow?: string;
+  positioningTitle?: string;
+  positioningDescription?: string;
+  activitiesEyebrow?: string;
+  activitiesTitle?: string;
+  activityAreas?: AboutOrderedItem[];
+  approachEyebrow?: string;
+  approachTitle?: string;
+  approachDescription?: string;
+  approachPoints?: AboutOrderedItem[];
+  productionEyebrow?: string;
+  productionTitle?: string;
+  productionDescription?: string;
+  productionPoints?: AboutOrderedItem[];
+  principlesEyebrow?: string;
+  principlesTitle?: string;
+  principles?: AboutOrderedItem[];
+  ctaEyebrow?: string;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  primaryCtaLabel?: string;
+  primaryCtaHref?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
 };
 
 export async function getAboutPage(): Promise<{
@@ -733,9 +746,9 @@ export async function getAboutPage(): Promise<{
   data: AboutPageData | null;
 }> {
   const path =
-    "/api/about-page?populate[0]=heroImageDesktop&populate[1]=heroImageMobile&populate[2]=midImageDesktop&populate[3]=midImageMobile&populate[4]=team&populate[5]=team.photo";
+    "/api/about-page?populate[0]=heroImage&populate[1]=activityAreas&populate[2]=approachPoints&populate[3]=productionPoints&populate[4]=principles";
 
-  const r = await strapiFetchRaw(path, { next: { revalidate: 3600 } });
+  const r = await strapiFetchRaw(path, { next: { revalidate: 300 } });
   const d = r.json?.data;
   const data: AboutPageData | null = d ? (d.attributes ?? d) : null;
 
