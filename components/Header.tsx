@@ -38,9 +38,9 @@ export default function Header({ categories = [] }: { categories?: CatalogCatego
 
   return (
     <header ref={rootRef} onClick={(event) => { if ((event.target as Element).closest("a")) { setDesktopMenu(null); setMobileOpen(false); } }} className="sticky top-0 z-[100] border-b border-black/10 bg-white/95 text-black shadow-[0_8px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 lg:px-8">
-        <Link href="/" className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DA291C]" aria-label="Kesiolabs ana sayfa">
-          <Image src="/kesiolabs-official-logo.png" alt="Kesiolabs" width={2172} height={724} priority className="h-9 w-auto object-contain sm:h-10" />
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-6">
+        <Link href="/" className="flex h-[76px] shrink-0 items-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DA291C]" aria-label="Kesiolabs ana sayfa">
+          <Image src="/kesiolabs-official-logo.png" alt="Kesiolabs" width={2172} height={724} priority className="h-[88px] w-auto max-w-none object-contain sm:h-[104px]" />
         </Link>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Ana navigasyon">
           <Link className={linkClass("/")} href="/">Anasayfa</Link>
