@@ -681,22 +681,6 @@ export async function getMainPage(): Promise<MainPageData | null> {
 }
 
 /* ---------------------------------------
-   QUOTE PAGE
----------------------------------------- */
-
-export async function getQuotePage(): Promise<any | null> {
-  const qs = new URLSearchParams();
-  qs.set("populate", "howItWorksVideo");
-
-  const r = await strapiFetchRaw(`/api/quote-page?${qs.toString()}`, {
-    next: { revalidate: 3600 },
-  });
-  if (!r.ok) return null;
-
-  return r.json?.data ?? null;
-}
-
-/* ---------------------------------------
    ABOUT PAGE
 ---------------------------------------- */
 

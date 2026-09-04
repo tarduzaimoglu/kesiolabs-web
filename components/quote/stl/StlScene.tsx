@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -9,9 +9,20 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 type Props = {
   fileUrl: string | null;
   colorHex: string;
-  onMetrics: (m: { volumeMM3: number; saMM2: number; sahMM2: number }) => void;
+  onAnalysis: (result: {
+    metrics: { volumeMM3: number; saMM2: number; sahMM2: number };
+    bounds: { width: number; height: number; depth: number };
+  }) => void;
   onError: (code: string) => void;
 };
+
+type WorkerResponse =
+  | {
+      type: "ok";
+      metrics: { volumeMM3: number; saMM2: number; sahMM2: number };
+      bounds: { width: number; height: number; depth: number; yOffset: number };
+    }
+  | { type: "err"; code: string };
 
 const BED_SIZE_MM = 256;
 const GRID_DIV = 16;
@@ -29,14 +40,15 @@ function StlMeshView({
   const geomRef = useRef<THREE.BufferGeometry | null>(null);
 
   // ✅ Material tek instance (iOS GPU leak engeli)
-  const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
-  if (!matRef.current) {
-    matRef.current = new THREE.MeshStandardMaterial({
+  const material = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
       roughness: 0.35,
       metalness: 0.05,
-    });
-  }
-  matRef.current.color.set(colorHex);
+      color: colorHex,
+    }),
+    [colorHex]
+  );
 
   // ✅ Unmount/cleanup
   useEffect(() => {
@@ -44,12 +56,11 @@ function StlMeshView({
       geomRef.current?.dispose();
       geomRef.current = null;
 
-      matRef.current?.dispose();
-      matRef.current = null;
-
       setGeom(null);
     };
   }, []);
+
+  useEffect(() => () => material.dispose(), [material]);
 
   // ✅ URL değişince STL'yi yükle (sadece görüntüleme için)
   useEffect(() => {
@@ -90,12 +101,12 @@ function StlMeshView({
 
   return (
     <group position={[0, yOffset, 0]}>
-      <mesh geometry={geom} material={matRef.current!} castShadow receiveShadow />
+      <mesh geometry={geom} material={material} castShadow receiveShadow />
     </group>
   );
 }
 
-export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Props) {
+export default function StlScene({ fileUrl, colorHex, onAnalysis, onError }: Props) {
   const [targetY, setTargetY] = useState(60);
   const [yOffset, setYOffset] = useState(0);
 
@@ -119,17 +130,17 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
 
     let alive = true;
 
-    const onMsg = (ev: MessageEvent<any>) => {
+    const onMsg = (ev: MessageEvent<WorkerResponse>) => {
       if (!alive) return;
       const data = ev.data;
 
-      if (data?.type === "err") {
+      if (data.type === "err") {
         onError(data.code || "STL_UNREADABLE");
         return;
       }
 
-      if (data?.type === "ok") {
-        onMetrics(data.metrics);
+      if (data.type === "ok") {
+        onAnalysis({ metrics: data.metrics, bounds: data.bounds });
 
         const h = data.bounds?.height ?? 120;
         const next = Math.max(35, Math.min(140, h * 0.45));
@@ -146,7 +157,7 @@ export default function StlScene({ fileUrl, colorHex, onMetrics, onError }: Prop
       alive = false;
       w.removeEventListener("message", onMsg);
     };
-  }, [fileUrl, onMetrics, onError]);
+  }, [fileUrl, onAnalysis, onError]);
 
   return (
     <Canvas

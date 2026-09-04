@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 
 const capabilities = [
   { icon: Factory, title: "Endüstriyel Ürün ve Sistem Tedariği", description: "Teknik gereksinimlerinize uygun ürün ve ekipmanları, doğru uygulama odağıyla bir araya getiriyoruz.", href: "/products" },
-  { icon: Layers3, title: "3D Baskı ve Prototipleme", description: "Dijital modelden fiziksel prototipe uzanan süreçte malzeme ve üretim seçeneklerini değerlendiriyoruz.", href: "/quote" },
-  { icon: DraftingCompass, title: "Özel Ürün Geliştirme ve Üretim", description: "Kurumsal ihtiyaçlara özel ürünleri tasarım, numune ve üretim adımlarıyla hayata geçiriyoruz.", href: "/custom-products" },
+  { icon: Layers3, title: "3D Baskı, Prototipleme ve Parça Üretimi", description: "Hazır modelleri prototipten endüstriyel parça üretimine taşırken malzeme, geometri ve üretilebilirlik gereksinimlerini değerlendiriyoruz.", href: "/3d-uretim" },
+  { icon: DraftingCompass, title: "Tasarım ve Projeye Özel Üretim", description: "Modelleme desteği, ürün geliştirme, kalıp/model odaklı baskı ve projeye özel üretim ihtiyaçlarını teknik incelemeyle ele alıyoruz.", href: "/3d-uretim" },
 ] as const;
 const articleLabels: Record<NonNullable<StrapiPost["articleType"]>, string> = { article: "Makale", news: "Haber", "application-note": "Uygulama Notu" };
 const formatDate = (value?: string) => value ? new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value)) : "";

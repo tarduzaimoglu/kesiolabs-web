@@ -31,9 +31,6 @@ function pathsForModel(model: string, entry: any): string[] {
     case "main-page":
       return ["/"];
 
-    case "quote-page":
-      return ["/quote"];
-
     case "page":
       return slug ? [`/${slug}`] : STATIC_PAGE_SLUGS.map((s) => `/${s}`);
 

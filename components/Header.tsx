@@ -57,6 +57,7 @@ export default function Header({ categories = [] }: { categories?: CatalogCatego
               </div>
             )}
           </div>
+          <Link className={linkClass("/3d-uretim")} href="/3d-uretim">3D Üretim</Link>
           <Link className={linkClass("/temsilcilikler")} href="/temsilcilikler">Temsilcilikler</Link>
           <div className="relative">
             <button type="button" className={`${linkClass("/makaleler")} inline-flex items-center gap-1.5`} aria-expanded={desktopMenu === "articles"} aria-controls="articles-menu" onClick={() => setDesktopMenu(desktopMenu === "articles" ? null : "articles")}>Makaleler <ChevronDown className={`h-4 w-4 transition-transform ${desktopMenu === "articles" ? "rotate-180" : ""}`} /></button>
@@ -72,6 +73,7 @@ export default function Header({ categories = [] }: { categories?: CatalogCatego
             <Link href="/" className="border-b border-black/10 py-4 font-semibold">Anasayfa</Link><Link href="/about" className="border-b border-black/10 py-4 font-semibold">Hakkımızda</Link>
             <button type="button" onClick={() => setMobileSection(mobileSection === "products" ? null : "products")} className="flex items-center justify-between border-b border-black/10 py-4 text-left font-semibold" aria-expanded={mobileSection === "products"}>Ürünler <ChevronDown className={`h-4 w-4 ${mobileSection === "products" ? "rotate-180" : ""}`} /></button>
             {mobileSection === "products" && <div className="border-b border-black/10 bg-black/[0.025] px-4 py-2"><Link href="/products" className="block py-3 font-bold text-[#DA291C]">Tüm ürünler</Link>{categories.map((category) => <Link key={category.key} href={`/products?category=${encodeURIComponent(category.key)}`} className="block py-3 text-sm font-medium">{category.label}</Link>)}</div>}
+            <Link href="/3d-uretim" className="border-b border-black/10 py-4 font-semibold">3D Üretim</Link>
             <Link href="/temsilcilikler" className="border-b border-black/10 py-4 font-semibold">Temsilcilikler</Link>
             <button type="button" onClick={() => setMobileSection(mobileSection === "articles" ? null : "articles")} className="flex items-center justify-between border-b border-black/10 py-4 text-left font-semibold" aria-expanded={mobileSection === "articles"}>Makaleler <ChevronDown className={`h-4 w-4 ${mobileSection === "articles" ? "rotate-180" : ""}`} /></button>
             {mobileSection === "articles" && <div className="border-b border-black/10 bg-black/[0.025] px-4 py-2">{articleLinks.map((item) => <Link key={item.href} href={item.href} className="block py-3 text-sm font-medium">{item.label}</Link>)}</div>}

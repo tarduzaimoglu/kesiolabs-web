@@ -5,11 +5,11 @@ import { computeMetricsFromGeometry } from "./stlMetrics";
 
 type Req = { type: "parse"; url: string };
 type Res =
-  | { type: "ok"; metrics: { volumeMM3: number; saMM2: number; sahMM2: number }; bounds: { height: number; centerY: number; yOffset: number } }
+  | { type: "ok"; metrics: { volumeMM3: number; saMM2: number; sahMM2: number }; bounds: { width: number; height: number; depth: number; centerY: number; yOffset: number } }
   | { type: "err"; code: string };
 
 function isIOS() {
-  const ua = (self as any).navigator?.userAgent || "";
+  const ua = self.navigator?.userAgent || "";
   return /iPhone|iPad|iPod/i.test(ua);
 }
 
@@ -48,12 +48,14 @@ self.onmessage = async (ev: MessageEvent<Req>) => {
       self.postMessage({
         type: "ok",
         metrics,
-        bounds: { height: 120, centerY: 0, yOffset: 0 },
+        bounds: { width: 0, height: 120, depth: 0, centerY: 0, yOffset: 0 },
       } as Res);
       return;
     }
 
     const height = bb.max.y - bb.min.y;
+    const width = bb.max.x - bb.min.x;
+    const depth = bb.max.z - bb.min.z;
     const centerY = (bb.max.y + bb.min.y) * 0.5;
     const yOffset = -bb.min.y;
 
@@ -62,10 +64,10 @@ self.onmessage = async (ev: MessageEvent<Req>) => {
     self.postMessage({
       type: "ok",
       metrics,
-      bounds: { height, centerY, yOffset },
+      bounds: { width, height, depth, centerY, yOffset },
     } as Res);
-  } catch (e: any) {
-    const msgStr = String(e?.message || e);
+  } catch (error: unknown) {
+    const msgStr = error instanceof Error ? error.message : String(error);
     if (msgStr.includes("TOO_COMPLEX")) self.postMessage({ type: "err", code: "TOO_COMPLEX" } as Res);
     else self.postMessage({ type: "err", code: "STL_UNREADABLE" } as Res);
   }
