@@ -445,6 +445,12 @@ export type CatalogProduct = {
 };
 
 const byOrder = <T extends { sortOrder: number }>(a: T, b: T) => a.sortOrder - b.sortOrder;
+const normalizeMicroscopeCategorySlug = (slug: string) =>
+  slug === "metalurjik-mikroskoplar" ? "optik-mikroskoplar" : slug;
+const normalizeMicroscopeCategoryTitle = (title: string) =>
+  title === "Metalurjik Mikroskoplar" ? "Optik Mikroskoplar" : title;
+const normalizeMicroscopeCategoryDescription = (description: string) =>
+  description.replace("metalurjik mikroskop sistemleri", "optik mikroskop sistemleri");
 const mapSpecifications = (items: any): TechnicalSpecification[] => (Array.isArray(items) ? items : []).map((item: AnyObj) => ({
   group: String(item?.group ?? ""), label: String(item?.label ?? ""), value: String(item?.value ?? ""), unit: String(item?.unit ?? ""), sortOrder: Number(item?.sortOrder ?? 0),
 })).filter((item) => item.label && item.value).sort(byOrder);
@@ -469,9 +475,9 @@ export async function getCatalogCategories(): Promise<CatalogCategory[]> {
 
 return items
   .map((x: AnyObj): CatalogCategory => ({
-    key: String(x?.slug ?? x?.id ?? ""),
-    label: String(x?.title ?? x?.slug ?? "Kategori"),
-    description: String(x?.description ?? ""),
+    key: normalizeMicroscopeCategorySlug(String(x?.slug ?? x?.id ?? "")),
+    label: normalizeMicroscopeCategoryTitle(String(x?.title ?? x?.slug ?? "Kategori")),
+    description: normalizeMicroscopeCategoryDescription(String(x?.description ?? "")),
     image: getMediaUrl(x?.image),
   }))
   .filter((x: CatalogCategory) => Boolean(x.key && x.label));
@@ -492,7 +498,7 @@ export async function getCatalogProducts(): Promise<CatalogProduct[]> {
 
   return items.map((x: AnyObj): CatalogProduct => {
     const cat = unwrapRelation(x?.category_product);
-    const categoryKey = String(cat?.slug ?? cat?.key ?? "");
+    const categoryKey = normalizeMicroscopeCategorySlug(String(cat?.slug ?? cat?.key ?? ""));
 
     const imgField = x?.image;
     const imageUrls = (Array.isArray(imgField) ? imgField : [imgField])
@@ -544,7 +550,7 @@ export type Representative = {
   slug: string;
   logo: string | null;
   shortDescription: string;
-  website: string;
+  websiteUrl: string;
   sortOrder: number;
   groupSlug: string | null;
 };
@@ -575,7 +581,7 @@ export async function getRepresentatives(): Promise<Representative[]> {
       slug: String(x?.slug ?? ""),
       logo: getMediaUrl(x?.logo),
       shortDescription: String(x?.shortDescription ?? ""),
-      website: String(x?.website ?? ""),
+      websiteUrl: String(x?.websiteUrl ?? x?.website ?? ""),
       sortOrder: Number(x?.sortOrder ?? 0),
       groupSlug: group?.slug ? String(group.slug) : null,
     };

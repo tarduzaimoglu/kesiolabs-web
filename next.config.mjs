@@ -1,10 +1,15 @@
+const strapiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") || "http://localhost:1337";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   async rewrites() {
     return [
       {
         source: "/backend/:path*",
-        destination: "https://kesiolabs-slave1.tail4be241.ts.net:8443/:path*",
+        destination: `${strapiBaseUrl}/:path*`,
       },
     ];
   },

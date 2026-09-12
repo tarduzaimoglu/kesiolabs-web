@@ -23,12 +23,12 @@ export default function ProductsClient({ products, categories }: { products: Cat
   const category = categories.some((item) => item.key === requestedCategory) ? requestedCategory : "all";
   const query = searchParams.get("q") ?? "";
   const [mobileOpen, setMobileOpen] = useState(false);
-  const categoryNames = new Map(categories.map((item) => [item.key, item.label]));
+  const categoryNames = useMemo(() => new Map(categories.map((item) => [item.key, item.label])), [categories]);
   const filtered = useMemo(() => products.filter((product) => {
     const categoryMatch = category === "all" || product.category === category;
-    const haystack = `${product.title} ${product.model} ${product.manufacturer} ${product.shortDescription}`.toLocaleLowerCase("tr");
+    const haystack = `${product.title} ${product.model} ${product.manufacturer} ${product.productType} ${categoryNames.get(product.category) ?? ""} ${product.shortDescription}`.toLocaleLowerCase("tr");
     return categoryMatch && haystack.includes(query.toLocaleLowerCase("tr").trim());
-  }), [products, category, query]);
+  }), [products, category, categoryNames, query]);
 
   const categoriesList = (mobile = false) => (
     <nav aria-label="Ürün kategorileri" className="space-y-1">

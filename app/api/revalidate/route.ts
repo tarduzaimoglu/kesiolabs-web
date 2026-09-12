@@ -20,7 +20,7 @@ function pathsForModel(model: string, entry: any): string[] {
 
     case "representative":
     case "representative-group":
-      return ["/temsilcilikler"];
+      return ["/temsilcilikler", "/"];
 
     case "custom-product-type":
       return ["/custom-products"];
