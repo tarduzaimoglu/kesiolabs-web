@@ -435,6 +435,7 @@ export type CatalogProduct = {
   description: string;
   category: string;
   featured: boolean;
+  availabilityStatus: "available" | "coming-soon" | "inquiry-only" | null;
   imageUrls: string[];
   primaryImg: string;
   technicalSpecifications: TechnicalSpecification[];
@@ -516,6 +517,7 @@ export async function getCatalogProducts(): Promise<CatalogProduct[]> {
       description: x?.description || "",
       category: categoryKey || "other",
       featured: !!x?.featured,
+      availabilityStatus: ["available", "coming-soon", "inquiry-only"].includes(x?.availabilityStatus) ? x.availabilityStatus : null,
       imageUrls,
       primaryImg,
       manufacturer: String(x?.manufacturer ?? ""),
